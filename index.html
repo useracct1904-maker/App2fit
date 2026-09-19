@@ -280,6 +280,50 @@
     .metric-card .metric-value.scale-info { color: var(--info); }
     .metric-card .metric-value.scale-elite { color: var(--purple); }
 
+    /* Gauge rows (estilo metabolics-insight) */
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 4px 0;
+      margin-bottom: 14px;
+    }
+    .panel-card-title {
+      font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em;
+      padding: 16px 18px 8px;
+    }
+    .gauge-row {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+    }
+    .gauge-row:first-of-type { border-top: none; }
+    .gauge-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 12px; margin-bottom: 6px;
+    }
+    .gauge-label { font-size: 0.92rem; color: var(--text); font-weight: 500; }
+    .gauge-sublabel { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+    .gauge-value { font-size: 1.05rem; font-weight: 700; white-space: nowrap; }
+    .gauge-track-wrap { position: relative; margin-top: 10px; padding-top: 10px; }
+    .gauge-marker {
+      position: absolute; top: 0; transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 8px solid #f1f5f9;
+      z-index: 2;
+    }
+    .gauge-track {
+      height: 8px; border-radius: 4px; width: 100%;
+    }
+    .gauge-labels {
+      display: flex; justify-content: space-between;
+      font-size: 0.68rem; color: var(--text-dim); margin-top: 6px;
+    }
+    .gauge-note {
+      font-size: 0.7rem; color: var(--text-dim); margin-top: 6px; line-height: 1.35;
+    }
+
     .legend-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 16px; padding: 14px 16px; margin-bottom: 10px;
@@ -333,12 +377,14 @@
     /* Tabs inside page */
     .mini-tabs {
       display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto;
-      padding-bottom: 2px;
+      flex-wrap: nowrap; padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none;
     }
+    .mini-tabs::-webkit-scrollbar { display: none; }
     .mini-tab {
-      padding: 7px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 550;
+      padding: 7px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 550;
       background: transparent; border: 1px solid var(--border); color: var(--text-muted);
-      cursor: pointer; white-space: nowrap; transition: all 0.2s;
+      cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;
     }
     .mini-tab.active {
       background: var(--accent); color: #052e16; border-color: var(--accent);
@@ -385,31 +431,20 @@
         </div>
       </div>
 
-      <div class="section">
-        <div class="section-title">Métricas principais</div>
-        <div class="card-grid" id="metricsGrid">
-          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">IMC</div></div>
-          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">FFMI</div></div>
-          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">BMR</div></div>
-          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">TDEE</div></div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Composição corporal</div>
-        <div class="card-grid-3" id="compGrid">
-          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">FMI</div></div>
-          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Massa magra</div></div>
-          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">% Músculo</div></div>
-        </div>
-      </div>
-
-      <div class="section" id="scaleLegendSection">
-        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
-          <span>Escalas de cores</span>
+      <div class="section" id="panelsSection">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
           <button type="button" class="btn btn-sm btn-outline-accent" id="btnExportPdf">Exportar PDF</button>
         </div>
-        <div id="scaleLegend"></div>
+        <div id="panelComposition" class="panel-card">
+          <div class="panel-card-title">Composição corporal</div>
+          <div class="gauge-row"><div class="gauge-head"><span class="gauge-label">—</span><span class="gauge-value">—</span></div></div>
+        </div>
+        <div id="panelMetabolism" class="panel-card">
+          <div class="panel-card-title">Metabolismo</div>
+        </div>
+        <div id="panelWater" class="panel-card">
+          <div class="panel-card-title">Água, risco e qualidade da mudança</div>
+        </div>
       </div>
 
       <div class="section">
@@ -420,20 +455,51 @@
           <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">kcal ativas</div></div>
           <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Distância</div></div>
         </div>
-        <div class="card" id="recentWorkouts" style="margin-top:10px;">
-          <div class="empty" style="padding:20px;"><p style="font-size:0.85rem;">Importe CSV/GPX da Zepp ou registe treinos.</p></div>
-        </div>
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-top:10px;">Lista completa de treinos em <strong>Histórico</strong>.</p>
       </div>
 
       <div class="section">
-        <div class="section-title">Evolução do peso</div>
+        <div class="section-title">Evolução das métricas</div>
         <div class="card">
-          <div class="mini-tabs" id="chartTabs">
-            <button class="mini-tab active" data-metric="weight">Peso</button>
-            <button class="mini-tab" data-metric="fat">% Gordura</button>
-            <button class="mini-tab" data-metric="muscle">Músculo</button>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label for="chartMetricSelect">Métrica do gráfico</label>
+            <select id="chartMetricSelect">
+              <option value="weight">Peso</option>
+              <option value="fat">Gordura corporal (%)</option>
+              <option value="fatMass">Massa gorda (kg)</option>
+              <option value="lean">Massa magra (kg)</option>
+              <option value="muscle">Massa muscular (kg)</option>
+              <option value="water">Água corporal (%)</option>
+              <option value="protein">Proteína</option>
+              <option value="bone">Massa óssea (kg)</option>
+              <option value="visceral">Gordura visceral</option>
+              <option value="subcut">Gordura subcutânea</option>
+              <option value="ffmi">FFMI (massa magra/altura²)</option>
+              <option value="bmr">Metabolismo basal</option>
+              <option value="tdee">Gasto diário estimado</option>
+              <option value="metAge">Idade metabólica</option>
+              <option value="bodyScore">Pontuação corporal</option>
+            </select>
+          </div>
+          <div class="mini-tabs" id="chartTabs" aria-hidden="true">
+            <button type="button" class="mini-tab active" data-metric="weight">Peso</button>
+            <button type="button" class="mini-tab" data-metric="fat">Gordura corporal</button>
+            <button type="button" class="mini-tab" data-metric="fatMass">Massa gorda</button>
+            <button type="button" class="mini-tab" data-metric="lean">Massa magra</button>
+            <button type="button" class="mini-tab" data-metric="muscle">Massa muscular</button>
+            <button type="button" class="mini-tab" data-metric="water">Água corporal</button>
+            <button type="button" class="mini-tab" data-metric="protein">Proteína</button>
+            <button type="button" class="mini-tab" data-metric="bone">Massa óssea</button>
+            <button type="button" class="mini-tab" data-metric="visceral">Gordura visceral</button>
+            <button type="button" class="mini-tab" data-metric="subcut">Gordura subcutânea</button>
+            <button type="button" class="mini-tab" data-metric="ffmi">FFMI</button>
+            <button type="button" class="mini-tab" data-metric="bmr">Metabolismo basal</button>
+            <button type="button" class="mini-tab" data-metric="tdee">Gasto diário</button>
+            <button type="button" class="mini-tab" data-metric="metAge">Idade metabólica</button>
+            <button type="button" class="mini-tab" data-metric="bodyScore">Pontuação corporal</button>
           </div>
           <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+          <p id="chartEmptyHint" style="display:none;font-size:0.78rem;color:var(--text-dim);margin-top:8px;text-align:center;"></p>
         </div>
       </div>
 
@@ -448,9 +514,21 @@
     <!-- PAGE: History -->
     <div id="page-history" class="page">
       <div class="section">
-        <div class="section-title">Histórico de pesagens</div>
-        <div class="card" id="historyList">
-          <div class="empty"><p>Sem registos ainda.</p></div>
+        <div class="mini-tabs" id="historyTabs" style="margin-bottom:14px;">
+          <button type="button" class="mini-tab active" data-hist="weighings">Pesagens</button>
+          <button type="button" class="mini-tab" data-hist="workouts">Treinos</button>
+        </div>
+        <div id="historyWeighingsBlock">
+          <div class="section-title">Histórico de pesagens</div>
+          <div class="card" id="historyList">
+            <div class="empty"><p>Sem registos ainda.</p></div>
+          </div>
+        </div>
+        <div id="historyWorkoutsBlock" style="display:none;">
+          <div class="section-title">Histórico de treinos</div>
+          <div class="card" id="historyWorkoutsList">
+            <div class="empty"><p>Sem treinos ainda.</p></div>
+          </div>
         </div>
       </div>
     </div>
@@ -772,6 +850,115 @@
           </select>
         </div>
         <button type="submit" class="btn btn-primary" style="width:100%; padding:14px;">Guardar perfil</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Weighing Modal -->
+  <div class="modal-overlay" id="editWeighModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Editar pesagem</div>
+        <button type="button" class="btn btn-ghost btn-sm" id="closeEditWeigh">Fechar</button>
+      </div>
+      <form id="editWeighForm">
+        <input type="hidden" id="ewIdx" />
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="ewDate" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Peso (kg)</label>
+            <input type="number" id="ewWeight" step="0.1" min="30" max="300" required />
+          </div>
+          <div class="form-group">
+            <label>% Gordura</label>
+            <input type="number" id="ewFat" step="0.1" min="3" max="60" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Músculo (kg)</label>
+            <input type="number" id="ewMuscle" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label>% Água</label>
+            <input type="number" id="ewWater" step="0.1" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Massa óssea (kg)</label>
+            <input type="number" id="ewBone" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label>Gordura visceral</label>
+            <input type="number" id="ewVisceral" step="1" />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:14px;">Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Workout Modal -->
+  <div class="modal-overlay" id="editWorkoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Editar treino</div>
+        <button type="button" class="btn btn-ghost btn-sm" id="closeEditWorkout">Fechar</button>
+      </div>
+      <form id="editWorkoutForm">
+        <input type="hidden" id="ewoIdx" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="ewoDate" required />
+          </div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="ewoType">
+              <option value="Força">Força</option>
+              <option value="Corrida">Corrida</option>
+              <option value="Caminhada">Caminhada</option>
+              <option value="Ciclismo">Ciclismo</option>
+              <option value="HIIT">HIIT</option>
+              <option value="Natação">Natação</option>
+              <option value="Outdoor (GPX)">Outdoor (GPX)</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Duração (min)</label>
+            <input type="number" id="ewoDuration" min="1" max="600" />
+          </div>
+          <div class="form-group">
+            <label>Distância (km)</label>
+            <input type="number" id="ewoDistance" step="0.1" min="0" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>kcal</label>
+            <input type="number" id="ewoCalories" min="0" />
+          </div>
+          <div class="form-group">
+            <label>FC média</label>
+            <input type="number" id="ewoAvgHr" min="40" max="220" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Água ingerida (ml)</label>
+          <input type="number" id="ewoWaterMl" min="0" max="5000" step="50" />
+        </div>
+        <div class="form-group">
+          <label>Notas</label>
+          <input type="text" id="ewoNotes" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:14px;">Guardar</button>
       </form>
     </div>
   </div>
@@ -1196,6 +1383,49 @@
       }</div>`;
     }
 
+    /** Barra contínua com marcador (estilo referência) */
+    function gaugeRow({ label, sublabel, valueText, pct, colors, zoneLabels, note }) {
+      const p = Math.max(0, Math.min(100, pct == null ? 50 : pct));
+      const grad = colors && colors.length
+        ? `linear-gradient(to right, ${colors.join(', ')})`
+        : 'linear-gradient(to right, #f59e0b, #22c55e, #38bdf8)';
+      const labels = (zoneLabels || []).map(t => `<span>${t}</span>`).join('');
+      return `
+        <div class="gauge-row">
+          <div class="gauge-head">
+            <div>
+              <div class="gauge-label">${label}</div>
+              ${sublabel ? `<div class="gauge-sublabel">${sublabel}</div>` : ''}
+            </div>
+            <div class="gauge-value">${valueText ?? '—'}</div>
+          </div>
+          ${pct != null ? `
+          <div class="gauge-track-wrap">
+            <div class="gauge-marker" style="left:${p}%"></div>
+            <div class="gauge-track" style="background:${grad}"></div>
+            ${zoneLabels?.length ? `<div class="gauge-labels">${labels}</div>` : ''}
+          </div>` : ''}
+          ${note ? `<div class="gauge-note">${note}</div>` : ''}
+        </div>`;
+    }
+
+    function pctInRange(value, min, max) {
+      if (value == null || isNaN(value)) return null;
+      if (max === min) return 50;
+      return ((value - min) / (max - min)) * 100;
+    }
+
+    function calcBMRKatch(leanKg) {
+      if (leanKg == null) return null;
+      return 370 + 21.6 * leanKg;
+    }
+
+    function adjustedFFMI(ffmi, heightCm) {
+      if (ffmi == null || !heightCm) return null;
+      const h = heightCm / 100;
+      return ffmi + 6.1 * (1.8 - h);
+    }
+
     function renderScaleLegend(sex) {
       const el = document.getElementById('scaleLegend');
       if (!el) return;
@@ -1321,6 +1551,10 @@
       water: ['water', 'body water', '% water', 'água', '% água', 'hydration', 'water%', 'body water %'],
       bone: ['bone', 'bone mass', 'massa óssea', 'bone (kg)', 'bone mass (kg)'],
       visceral: ['visceral', 'visceral fat', 'gordura visceral', 'visceral fat level'],
+      protein: ['protein', 'proteína', 'proteina', 'protein mass', 'protein (kg)'],
+      subcut: ['subcut', 'subcutaneous', 'gordura subcutânea', 'subcutaneous fat', 'subcut fat'],
+      protein: ['protein', 'proteína', 'protein mass', 'protein %', 'proteina'],
+      subcut: ['subcutaneous', 'subcutânea', 'gordura subcutânea', 'subcutaneous fat'],
       steps: ['steps', 'passos', 'step', 'total steps', 'step count'],
       calories: ['calories', 'calorie', 'kcal', 'cal', 'calories burned', 'active calories', 'calorias'],
       distance: ['distance', 'distância', 'distance (km)', 'distance(m)', 'distance km', 'dist'],
@@ -1405,7 +1639,9 @@
           muscle: colMap.muscle != null ? parseNumber(cols[colMap.muscle]) : null,
           water: colMap.water != null ? parseNumber(cols[colMap.water]) : null,
           bone: colMap.bone != null ? parseNumber(cols[colMap.bone]) : null,
-          visceral: colMap.visceral != null ? parseNumber(cols[colMap.visceral]) : null
+          visceral: colMap.visceral != null ? parseNumber(cols[colMap.visceral]) : null,
+          protein: colMap.protein != null ? parseNumber(cols[colMap.protein]) : null,
+          subcut: colMap.subcut != null ? parseNumber(cols[colMap.subcut]) : null
         });
       }
       return entries;
@@ -1804,30 +2040,153 @@
 
     // ========== Chart ==========
     let weightChart = null;
+
+    /** Calcula idade metabólica aproximada (BMR vs BMR esperado pela idade cronológica) */
+    function metabolicAge(weight, heightCm, age, sex) {
+      if (!weight || !heightCm || !age) return null;
+      const bmr = calcBMR(weight, heightCm, age, sex);
+      // BMR esperado por idade (inverso aproximado Mifflin): resolver idade a partir do BMR
+      // Mifflin: M: 10w + 6.25h - 5a + 5  →  a = (10w + 6.25h + 5 - bmr) / 5
+      // F: 10w + 6.25h - 5a - 161 → a = (10w + 6.25h - 161 - bmr) / 5
+      const base = 10 * weight + 6.25 * heightCm;
+      let metAge;
+      if (sex === 'F') metAge = (base - 161 - bmr) / 5;
+      else metAge = (base + 5 - bmr) / 5;
+      // Ajuste: se BMR alto, idade metabólica mais baixa
+      // Usar comparação com BMR da idade real
+      const bmrAtAge = calcBMR(weight, heightCm, age, sex);
+      const bmrYoung = calcBMR(weight, heightCm, Math.max(18, age - 15), sex);
+      const bmrOld = calcBMR(weight, heightCm, age + 15, sex);
+      // Interpolação linear simples: BMR decresce com idade
+      if (bmrYoung === bmrOld) return age;
+      const t = (bmr - bmrOld) / (bmrYoung - bmrOld);
+      metAge = (age + 15) - t * 30;
+      return Math.max(15, Math.min(90, Math.round(metAge)));
+    }
+
+    /** Pontuação corporal 0–100 (heurística: IMC, gordura, visceral, músculo) */
+    function bodyScore(weight, heightCm, fat, visceral, muscle, sex) {
+      if (!weight || !heightCm) return null;
+      let score = 70;
+      const bmi = calcBMI(weight, heightCm);
+      if (bmi >= 18.5 && bmi < 25) score += 10;
+      else if (bmi >= 25 && bmi < 30) score -= 5;
+      else if (bmi >= 30) score -= 15;
+      else score -= 5;
+      if (fat != null) {
+        const ideal = sex === 'F' ? [21, 33] : [10, 20];
+        if (fat >= ideal[0] && fat <= ideal[1]) score += 10;
+        else if (fat > ideal[1] + 5) score -= 10;
+        else score -= 3;
+      }
+      if (visceral != null) {
+        if (visceral < 10) score += 8;
+        else if (visceral < 15) score -= 2;
+        else score -= 12;
+      }
+      if (muscle != null && weight) {
+        const mp = (muscle / weight) * 100;
+        if (mp >= 40) score += 5;
+        else if (mp < 30) score -= 5;
+      }
+      return Math.max(0, Math.min(100, Math.round(score)));
+    }
+
+    const CHART_METRICS = {
+      weight:   { label: 'Peso (kg)', color: '#22c55e', get: d => d.weight },
+      fat:      { label: 'Gordura corporal (%)', color: '#f59e0b', get: d => d.fat },
+      fatMass:  { label: 'Massa gorda (kg)', color: '#f97316', get: d => d.fat != null ? +(d.weight * d.fat / 100).toFixed(2) : null },
+      lean:     { label: 'Massa magra (kg)', color: '#34d399', get: d => d.fat != null ? +(d.weight * (1 - d.fat / 100)).toFixed(2) : null },
+      muscle:   { label: 'Massa muscular (kg)', color: '#38bdf8', get: d => d.muscle },
+      water:    { label: 'Água corporal (%)', color: '#0ea5e9', get: d => d.water },
+      protein:  { label: 'Proteína', color: '#a78bfa', get: d => d.protein },
+      bone:     { label: 'Massa óssea (kg)', color: '#94a3b8', get: d => d.bone },
+      visceral: { label: 'Gordura visceral', color: '#ef4444', get: d => d.visceral },
+      subcut:   {
+        label: 'Gordura subcutânea',
+        color: '#fb7185',
+        get: d => {
+          if (d.subcut != null) return d.subcut;
+          // Estimativa aproximada se houver % gordura e visceral (não é medida clínica)
+          if (d.fat != null && d.visceral != null) return +Math.max(0, d.fat - d.visceral * 0.8).toFixed(1);
+          return null;
+        }
+      },
+      ffmi: {
+        label: 'FFMI (kg/m²)',
+        color: '#818cf8',
+        get: d => {
+          const p = state.profile;
+          if (!p?.height || d.fat == null) return null;
+          return calcFFMI(d.weight, p.height, d.fat);
+        }
+      },
+      bmr: {
+        label: 'Metabolismo basal (kcal)',
+        color: '#f97316',
+        get: d => {
+          const p = state.profile;
+          if (!p?.height) return null;
+          return Math.round(calcBMR(d.weight, p.height, p.age || 30, p.sex));
+        }
+      },
+      tdee: {
+        label: 'Gasto diário estimado (kcal)',
+        color: '#eab308',
+        get: d => {
+          const p = state.profile;
+          if (!p?.height) return null;
+          const bmr = calcBMR(d.weight, p.height, p.age || 30, p.sex);
+          return Math.round(calcTDEE(bmr, p.activity));
+        }
+      },
+      metAge: {
+        label: 'Idade metabólica (anos)',
+        color: '#c084fc',
+        get: d => {
+          const p = state.profile;
+          if (!p?.height || !p.age) return null;
+          return metabolicAge(d.weight, p.height, p.age, p.sex);
+        }
+      },
+      bodyScore: {
+        label: 'Pontuação corporal',
+        color: '#22c55e',
+        get: d => {
+          const p = state.profile;
+          if (!p?.height) return null;
+          return bodyScore(d.weight, p.height, d.fat, d.visceral, d.muscle, p.sex);
+        }
+      }
+    };
+
     function renderChart() {
       const ctx = document.getElementById('weightChart');
+      const hint = document.getElementById('chartEmptyHint');
       if (!ctx) return;
-      const data = state.weighings.slice(-45);
-      if (weightChart) weightChart.destroy();
+      const data = state.weighings.slice(-60);
+      if (weightChart) { weightChart.destroy(); weightChart = null; }
 
+      const cfg = CHART_METRICS[chartMetric] || CHART_METRICS.weight;
       const labels = data.map(d => {
         const dt = new Date(d.date);
         return dt.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
       });
+      const values = data.map(d => cfg.get(d));
+      const hasData = values.some(v => v != null && !isNaN(v));
 
-      let values, label, color;
-      if (chartMetric === 'fat') {
-        values = data.map(d => d.fat);
-        label = '% Gordura';
-        color = '#f59e0b';
-      } else if (chartMetric === 'muscle') {
-        values = data.map(d => d.muscle);
-        label = 'Músculo (kg)';
-        color = '#38bdf8';
-      } else {
-        values = data.map(d => d.weight);
-        label = 'Peso (kg)';
-        color = '#22c55e';
+      if (hint) {
+        if (!data.length) {
+          hint.style.display = 'block';
+          hint.textContent = 'Sem pesagens para mostrar.';
+        } else if (!hasData) {
+          hint.style.display = 'block';
+          hint.textContent = chartMetric === 'protein' || chartMetric === 'subcut'
+            ? 'Esta métrica não está nos dados importados. Importe um CSV que a inclua ou escolha outra métrica.'
+            : 'Dados insuficientes (configure o perfil com altura/idade ou importe mais campos).';
+        } else {
+          hint.style.display = 'none';
+        }
       }
 
       weightChart = new Chart(ctx, {
@@ -1835,14 +2194,14 @@
         data: {
           labels,
           datasets: [{
-            label,
+            label: cfg.label,
             data: values,
-            borderColor: color,
-            backgroundColor: color + '22',
+            borderColor: cfg.color,
+            backgroundColor: cfg.color + '22',
             fill: true,
             tension: 0.35,
             pointRadius: 3,
-            pointBackgroundColor: color,
+            pointBackgroundColor: cfg.color,
             spanGaps: true
           }]
         },
@@ -1903,89 +2262,232 @@
         `;
       }
 
-      // Main metrics with color scales
-      const grid = document.getElementById('metricsGrid');
+      // Painéis com escalas coloridas (estilo referência)
+      const panelComp = document.getElementById('panelComposition');
+      const panelMet = document.getElementById('panelMetabolism');
+      const panelWater = document.getElementById('panelWater');
+
       if (p && w.length) {
         const last = w[w.length - 1];
+        const sex = p.sex || 'M';
         const bmi = calcBMI(last.weight, p.height);
         const ffmi = calcFFMI(last.weight, p.height, last.fat);
-        const bmr = calcBMR(last.weight, p.height, p.age || 30, p.sex);
-        const tdee = calcTDEE(bmr, p.activity);
-        const cat = classifyMetric('bmi', bmi);
-        const ffmiCat = classifyMetric('ffmi', ffmi, p.sex);
-        grid.innerHTML = `
-          <div class="metric-card">
-            <div class="metric-value scale-${cat.tone}">${bmi.toFixed(1)}</div>
-            <div class="metric-label">IMC</div>
-            <div class="metric-sub"><span class="badge ${cat.badge}">${cat.text}</span></div>
-            ${scaleBarHtml(cat)}
-          </div>
-          <div class="metric-card">
-            <div class="metric-value ${ffmiCat ? 'scale-' + ffmiCat.tone : ''}">${ffmi != null ? ffmi.toFixed(1) : '—'}</div>
-            <div class="metric-label">FFMI</div>
-            <div class="metric-sub">${ffmiCat ? `<span class="badge ${ffmiCat.badge}">${ffmiCat.text}</span>` : 'massa magra'}</div>
-            ${scaleBarHtml(ffmiCat)}
-          </div>
-          <div class="metric-card">
-            <div class="metric-value">${Math.round(bmr)}</div>
-            <div class="metric-label">BMR</div>
-            <div class="metric-sub">kcal/dia</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-value">${Math.round(tdee)}</div>
-            <div class="metric-label">TDEE</div>
-            <div class="metric-sub">kcal/dia</div>
-          </div>
-        `;
-      }
-
-      // Composition metrics with color scales
-      const compGrid = document.getElementById('compGrid');
-      if (p && w.length) {
-        const last = w[w.length - 1];
+        const ffmiAdj = adjustedFFMI(ffmi, p.height);
         const fmi = fatMassIndex(last.weight, p.height, last.fat);
         const lean = leanMass(last.weight, last.fat);
-        const mPct = musclePct(last.weight, last.muscle);
-        const fmiCat = classifyMetric('fmi', fmi, p.sex);
-        const fatCat = classifyMetric('fat', last.fat, p.sex);
-        const visCat = classifyMetric('visceral', last.visceral);
-        const hydCat = classifyMetric('water', last.water);
-        compGrid.innerHTML = `
-          <div class="metric-card">
-            <div class="metric-value ${fmiCat ? 'scale-' + fmiCat.tone : ''}">${fmi != null ? fmi.toFixed(1) : '—'}</div>
-            <div class="metric-label">FMI</div>
-            <div class="metric-sub">${fmiCat ? `<span class="badge ${fmiCat.badge}">${fmiCat.text}</span>` : 'massa gorda'}</div>
-            ${scaleBarHtml(fmiCat)}
-          </div>
-          <div class="metric-card">
-            <div class="metric-value">${lean != null ? lean.toFixed(1) : '—'}</div>
-            <div class="metric-label">Massa magra</div>
-            <div class="metric-sub">kg</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-value ${fatCat ? 'scale-' + fatCat.tone : ''}">${last.fat != null ? last.fat + '%' : (mPct != null ? mPct.toFixed(1) + '%' : '—')}</div>
-            <div class="metric-label">${last.fat != null ? '% Gordura' : '% Músculo'}</div>
-            <div class="metric-sub">${fatCat ? `<span class="badge ${fatCat.badge}">${fatCat.text}</span>` : (mPct != null ? 'do peso' : '')}</div>
-            ${scaleBarHtml(fatCat)}
-          </div>
-          ${last.visceral != null ? `
-          <div class="metric-card">
-            <div class="metric-value ${visCat ? 'scale-' + visCat.tone : ''}">${last.visceral}</div>
-            <div class="metric-label">Visceral</div>
-            <div class="metric-sub">${visCat ? `<span class="badge ${visCat.badge}">${visCat.text}</span>` : 'nível'}</div>
-            ${scaleBarHtml(visCat)}
-          </div>` : ''}
-          ${last.water != null ? `
-          <div class="metric-card">
-            <div class="metric-value ${hydCat ? 'scale-' + hydCat.tone : ''}">${last.water}%</div>
-            <div class="metric-label">Água</div>
-            <div class="metric-sub">${hydCat ? `<span class="badge ${hydCat.badge}">${hydCat.text}</span>` : ''}</div>
-            ${scaleBarHtml(hydCat)}
-          </div>` : ''}
-        `;
-      }
+        const fatMass = last.fat != null ? last.weight * last.fat / 100 : null;
+        const muscleIdx = last.muscle != null && p.height
+          ? last.muscle / Math.pow(p.height / 100, 2) : null;
+        const muscleFatRatio = last.muscle != null && fatMass > 0
+          ? last.muscle / fatMass : null;
+        const bmrMifflin = calcBMR(last.weight, p.height, p.age || 30, sex);
+        const bmrKatch = calcBMRKatch(lean);
+        const tdee = calcTDEE(bmrMifflin, p.activity);
+        const deficit05 = tdee - 550;
+        const proteinRec = lean != null ? Math.round(lean * 2) : Math.round(last.weight * 1.6);
+        const metAge = metabolicAge(last.weight, p.height, p.age || 30, sex);
+        const waterKg = last.water != null ? last.weight * last.water / 100 : null;
+        const hydLean = waterKg != null && lean > 0 ? (waterKg / lean) * 100 : null;
+        const bmrScale = last.bmr != null ? last.bmr : null;
 
-      renderScaleLegend(p?.sex || 'M');
+        // P-ratio: Δlean / Δweight over recent period (Forbes-like)
+        let pRatio = null;
+        if (w.length >= 2 && last.fat != null) {
+          const first = w[0];
+          if (first.fat != null) {
+            const dW = last.weight - first.weight;
+            const dLean = leanMass(last.weight, last.fat) - leanMass(first.weight, first.fat);
+            if (Math.abs(dW) > 0.3) pRatio = dLean / dW;
+          }
+        }
+
+        if (panelComp) {
+          panelComp.innerHTML = `
+            <div class="panel-card-title">Composição corporal</div>
+            ${gaugeRow({
+              label: 'IMC',
+              valueText: bmi.toFixed(1),
+              pct: pctInRange(bmi, 16, 35),
+              colors: ['#38bdf8', '#22c55e', '#f59e0b', '#ef4444'],
+              zoneLabels: ['Baixo', 'Normal', 'Excesso', 'Obeso'],
+              note: 'Referência · OMS / WHO'
+            })}
+            ${gaugeRow({
+              label: 'Massa gorda',
+              valueText: fatMass != null ? fatMass.toFixed(1) + ' kg' : '—',
+              pct: last.fat != null ? pctInRange(last.fat, sex === 'F' ? 10 : 5, sex === 'F' ? 40 : 35) : null,
+              colors: ['#f59e0b', '#22c55e', '#ef4444'],
+              zoneLabels: ['Baixa', 'Saudável', 'Elevada'],
+              note: 'Contextual · Massa gorda contextualizada pela percentagem de gordura'
+            })}
+            ${gaugeRow({
+              label: 'Massa magra (FFM)',
+              valueText: lean != null ? lean.toFixed(1) + ' kg' : '—'
+            })}
+            ${gaugeRow({
+              label: 'FFMI',
+              sublabel: 'massa magra por altura²',
+              valueText: ffmi != null ? ffmi.toFixed(1) : '—',
+              pct: ffmi != null ? pctInRange(ffmi, sex === 'F' ? 14 : 16, sex === 'F' ? 22 : 25) : null,
+              colors: ['#f59e0b', '#38bdf8', '#22c55e', '#a78bfa'],
+              zoneLabels: ['Baixo', 'Média', 'Bom', 'Elevado'],
+              note: 'Referência · Kouri et al., Clin J Sport Med 1995'
+            })}
+            ${gaugeRow({
+              label: 'FFMI ajustado',
+              sublabel: 'normalizado a 1,80 m',
+              valueText: ffmiAdj != null ? ffmiAdj.toFixed(1) : '—'
+            })}
+            ${gaugeRow({
+              label: 'Índice de massa gorda (FMI)',
+              valueText: fmi != null ? fmi.toFixed(1) : '—',
+              pct: fmi != null ? pctInRange(fmi, 2, sex === 'F' ? 15 : 12) : null,
+              colors: ['#38bdf8', '#22c55e', '#f59e0b', '#ef4444'],
+              zoneLabels: ['Baixo', 'Normal', 'Elevado', 'Alto'],
+              note: 'Referência · Schutz / Kyle (ESPEN)'
+            })}
+            ${gaugeRow({
+              label: 'Índice de massa muscular',
+              sublabel: 'kg/m²',
+              valueText: muscleIdx != null ? muscleIdx.toFixed(1) : '—'
+            })}
+            ${gaugeRow({
+              label: 'Razão músculo/gordura',
+              valueText: muscleFatRatio != null ? muscleFatRatio.toFixed(2) : '—',
+              pct: muscleFatRatio != null ? pctInRange(muscleFatRatio, 0.5, 5) : null,
+              colors: ['#f59e0b', '#38bdf8', '#22c55e'],
+              zoneLabels: ['Baixa', 'Intermédia', 'Elevada'],
+              note: 'Contextual · Comparação individual músculo/gordura; sem limites clínicos universais'
+            })}
+          `;
+        }
+
+        if (panelMet) {
+          panelMet.innerHTML = `
+            <div class="panel-card-title">Metabolismo</div>
+            ${gaugeRow({
+              label: 'Metabolismo basal (Katch–McArdle)',
+              valueText: bmrKatch != null ? Math.round(bmrKatch) + ' kcal' : '—',
+              pct: bmrKatch != null ? pctInRange(bmrKatch, bmrMifflin * 0.85, bmrMifflin * 1.15) : null,
+              colors: ['#f59e0b', '#22c55e', '#38bdf8'],
+              zoneLabels: ['Abaixo', 'Referência', 'Acima'],
+              note: 'Contextual · Comparação entre equações preditivas; não é classificação clínica'
+            })}
+            ${gaugeRow({
+              label: 'Metabolismo basal (Mifflin–St Jeor)',
+              valueText: Math.round(bmrMifflin) + ' kcal'
+            })}
+            ${bmrScale != null ? gaugeRow({
+              label: 'Balança (medido)',
+              valueText: Math.round(bmrScale) + ' kcal',
+              pct: pctInRange(bmrScale, bmrMifflin * 0.85, bmrMifflin * 1.15),
+              colors: ['#f59e0b', '#22c55e', '#38bdf8'],
+              zoneLabels: ['Abaixo', 'Referência', 'Acima'],
+              note: 'Contextual · Valor da balança face à estimativa metabólica'
+            }) : ''}
+            ${gaugeRow({
+              label: 'Gasto diário estimado',
+              valueText: Math.round(tdee) + ' kcal',
+              pct: pctInRange(tdee, bmrMifflin * 1.1, bmrMifflin * 2.0),
+              colors: ['#f59e0b', '#22c55e', '#38bdf8'],
+              zoneLabels: ['Abaixo', 'Referência', 'Acima'],
+              note: 'Contextual · Estimativa por nível de atividade; não é limite clínico'
+            })}
+            ${gaugeRow({
+              label: 'Défice para −0,5 kg/semana',
+              valueText: Math.round(deficit05) + ' kcal',
+              pct: pctInRange(deficit05, bmrMifflin * 0.9, tdee),
+              colors: ['#f59e0b', '#22c55e', '#38bdf8'],
+              zoneLabels: ['Abaixo', 'Referência', 'Acima'],
+              note: 'Contextual · Défice moderado aproximado de 500–550 kcal/dia'
+            })}
+            ${gaugeRow({
+              label: 'Proteína recomendada',
+              sublabel: '2 g/kg de massa magra',
+              valueText: proteinRec + ' g/dia',
+              pct: 55,
+              colors: ['#38bdf8', '#22c55e', '#f59e0b'],
+              zoneLabels: ['Base', 'Treino/dieta', 'Acima'],
+              note: 'Contextual · ISSN 2017: 1,4–2,0 g/kg; até 2,2 g/kg em défice'
+            })}
+            ${gaugeRow({
+              label: 'Idade metabólica',
+              valueText: metAge != null ? metAge + ' anos' : '—'
+            })}
+          `;
+        }
+
+        if (panelWater) {
+          panelWater.innerHTML = `
+            <div class="panel-card-title">Água, risco e qualidade da mudança</div>
+            ${gaugeRow({
+              label: 'Água corporal',
+              valueText: last.water != null ? last.water.toFixed(1) + ' %' : '—',
+              pct: last.water != null ? pctInRange(last.water, 45, 70) : null,
+              colors: ['#f59e0b', '#22c55e', '#38bdf8'],
+              zoneLabels: ['Baixa', 'Habitual', 'Elevada'],
+              note: 'Contextual · Faixas típicas de água corporal total (TBW)'
+            })}
+            ${gaugeRow({
+              label: 'Água total',
+              valueText: waterKg != null ? waterKg.toFixed(1) + ' kg' : '—',
+              pct: waterKg != null ? pctInRange(waterKg, last.weight * 0.45, last.weight * 0.7) : null,
+              colors: ['#f59e0b', '#22c55e', '#38bdf8'],
+              zoneLabels: ['Abaixo', 'Referência', 'Acima'],
+              note: 'Contextual · Água total esperada a partir do peso e sexo'
+            })}
+            ${gaugeRow({
+              label: 'Hidratação da massa magra',
+              sublabel: 'referência 70–76 %',
+              valueText: hydLean != null ? hydLean.toFixed(1) + ' %' : '—',
+              pct: hydLean != null ? pctInRange(hydLean, 65, 80) : null,
+              colors: ['#f59e0b', '#22c55e', '#f59e0b'],
+              zoneLabels: ['Baixa', 'Esperada', 'Elevada'],
+              note: 'Referência · Wang et al.; hidratação esperada da massa isenta de gordura'
+            })}
+            ${gaugeRow({
+              label: 'Gordura visceral',
+              sublabel: last.visceral != null && last.visceral < 10 ? 'Saudável' : '',
+              valueText: last.visceral != null ? String(last.visceral) : '—',
+              pct: last.visceral != null ? pctInRange(last.visceral, 1, 20) : null,
+              colors: ['#22c55e', '#f59e0b', '#ef4444'],
+              zoneLabels: ['Saudável', 'Elevada', 'Muito elevada'],
+              note: 'Contextual · Escala de classificação BIA (ex. Runstar / Tanita)'
+            })}
+            ${last.protein != null || last.fat != null ? gaugeRow({
+              label: 'Proteína',
+              valueText: last.protein != null
+                ? (last.protein > 40 ? last.protein.toFixed(1) + ' %' : last.protein.toFixed(1) + (last.protein < 30 ? ' %' : ' kg'))
+                : '—',
+              pct: last.protein != null ? pctInRange(typeof last.protein === 'number' ? last.protein : 15, 10, 25) : null,
+              colors: ['#f59e0b', '#22c55e', '#38bdf8'],
+              zoneLabels: ['Baixa', 'Faixa do aparelho', 'Elevada'],
+              note: 'Contextual · Estimativa BIA dependente do aparelho; sem limites clínicos universais'
+            }) : ''}
+            ${gaugeRow({
+              label: 'Massa óssea',
+              valueText: last.bone != null ? last.bone.toFixed(2) + ' kg' : '—',
+              pct: last.bone != null ? pctInRange(last.bone, 2, 5) : null,
+              colors: ['#f59e0b', '#22c55e', '#38bdf8'],
+              zoneLabels: ['Abaixo', 'Referência', 'Acima'],
+              note: 'Contextual · Estimativa BIA contextual; não mede densidade mineral óssea'
+            })}
+            ${pRatio != null ? gaugeRow({
+              label: 'P-ratio do período',
+              sublabel: pRatio < 0.2 ? 'excelente: perdeu sobretudo gordura' : (pRatio > 0.5 ? 'perda magra elevada' : 'intermédio'),
+              valueText: pRatio.toFixed(2),
+              pct: pctInRange(pRatio, -0.2, 1),
+              colors: ['#22c55e', '#f59e0b', '#ef4444'],
+              zoneLabels: ['Preserva massa magra', 'Intermédio', 'Perda magra alta'],
+              note: 'Contextual · Forbes; modelo de repartição da alteração de peso'
+            }) : ''}
+          `;
+        }
+      } else {
+        if (panelComp) panelComp.innerHTML = `<div class="panel-card-title">Composição corporal</div><div class="gauge-row"><p style="color:var(--text-muted);font-size:0.88rem;">Configure o perfil e registe uma pesagem.</p></div>`;
+        if (panelMet) panelMet.innerHTML = `<div class="panel-card-title">Metabolismo</div>`;
+        if (panelWater) panelWater.innerHTML = `<div class="panel-card-title">Água, risco e qualidade da mudança</div>`;
+      }
 
       // Activity metrics
       const actGrid = document.getElementById('activityGrid');
@@ -2015,39 +2517,6 @@
           </div>
         `;
       }
-      const rw = document.getElementById('recentWorkouts');
-      if (rw) {
-        const recent = [...state.workouts].reverse().slice(0, 8);
-        if (!recent.length) {
-          rw.innerHTML = `<div class="empty" style="padding:20px;"><p style="font-size:0.85rem;">Importe CSV/GPX da Zepp ou registe um treino com análise antes/depois.</p></div>`;
-        } else {
-          rw.innerHTML = recent.map((w, idx) => {
-            const analysis = analyzeWorkout(w);
-            const hasBA = w.before?.weight != null || w.after?.weight != null || w.waterMl != null;
-            return `
-            <div style="padding:12px 0; border-bottom:1px solid var(--border);">
-              <div class="history-item" style="border:none;padding:0;">
-                <div>
-                  <div class="history-weight" style="font-size:0.95rem;">${w.type}</div>
-                  <div class="history-date">${new Date(w.date).toLocaleDateString('pt-PT')}${w.durationMin ? ' · ' + w.durationMin + ' min' : ''}${w.distanceKm ? ' · ' + w.distanceKm + ' km' : ''}${w.waterMl != null ? ' · 💧 ' + w.waterMl + ' ml' : ''}</div>
-                </div>
-                <div style="text-align:right;font-size:0.85rem;color:var(--text-muted);">
-                  ${w.calories ? w.calories + ' kcal' : ''}${w.avgHr ? '<br>FC ' + w.avgHr : ''}
-                </div>
-              </div>
-              ${hasBA ? `
-              <div style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);line-height:1.5;background:#0d1829;border-radius:10px;padding:10px 12px;">
-                <strong style="color:var(--info);">Análise antes → depois</strong><br>
-                ${w.before?.weight != null || w.after?.weight != null ? `Peso: ${w.before?.weight != null ? w.before.weight.toFixed(1) : '—'} → ${w.after?.weight != null ? w.after.weight.toFixed(1) : '—'} kg<br>` : ''}
-                ${w.before?.fat != null || w.after?.fat != null ? `Gordura: ${w.before?.fat != null ? w.before.fat + '%' : '—'} → ${w.after?.fat != null ? w.after.fat + '%' : '—'}<br>` : ''}
-                ${w.before?.muscle != null || w.after?.muscle != null ? `Músculo: ${w.before?.muscle != null ? w.before.muscle + ' kg' : '—'} → ${w.after?.muscle != null ? w.after.muscle + ' kg' : '—'}<br>` : ''}
-                <span style="color:var(--text);">${analysis}</span>
-              </div>` : `<div style="margin-top:6px;font-size:0.78rem;color:var(--text-dim);">${analysis}</div>`}
-            </div>`;
-          }).join('');
-        }
-      }
-
       renderChart();
 
       const insights = generateInsights();
@@ -2069,32 +2538,74 @@
 
     function renderHistory() {
       const list = document.getElementById('historyList');
+      const wList = document.getElementById('historyWorkoutsList');
       const w = [...state.weighings].reverse();
       if (!w.length) {
-        list.innerHTML = `<div class="empty"><p>Sem registos ainda.</p></div>`;
+        list.innerHTML = `<div class="empty"><p>Sem pesagens ainda.</p></div>`;
+      } else {
+        list.innerHTML = w.map((item, idx) => {
+          const realIdx = state.weighings.length - 1 - idx;
+          const prev = realIdx > 0 ? state.weighings[realIdx - 1] : null;
+          let delta = '';
+          if (prev) {
+            const d = item.weight - prev.weight;
+            const cls = d > 0 ? 'delta-up' : 'delta-down';
+            delta = `<span class="history-delta ${cls}">${d > 0 ? '+' : ''}${d.toFixed(1)} kg</span>`;
+          }
+          const extras = [
+            item.fat != null ? `Gord. ${item.fat}%` : null,
+            item.muscle != null ? `Músc. ${item.muscle} kg` : null,
+            item.water != null ? `Água ${item.water}%` : null
+          ].filter(Boolean).join(' · ');
+          return `
+            <div class="history-item">
+              <div>
+                <div class="history-weight">${item.weight.toFixed(1)} kg</div>
+                <div class="history-date">${new Date(item.date).toLocaleDateString('pt-PT')}${extras ? ' · ' + extras : ''}${item.note ? ' · ' + item.note : ''}</div>
+              </div>
+              <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                ${delta}
+                <div style="display:flex;gap:4px;">
+                  <button type="button" class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:0.75rem;" onclick="editWeighing(${realIdx})">Editar</button>
+                  <button type="button" class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:0.75rem;" onclick="deleteWeighing(${realIdx})">Apagar</button>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      const workouts = [...state.workouts].reverse();
+      if (!wList) return;
+      if (!workouts.length) {
+        wList.innerHTML = `<div class="empty"><p>Sem treinos ainda. Importe CSV/GPX ou registe em Adicionar.</p></div>`;
         return;
       }
-      list.innerHTML = w.map((item, idx) => {
-        const realIdx = state.weighings.length - 1 - idx;
-        const prev = realIdx > 0 ? state.weighings[realIdx - 1] : null;
-        let delta = '';
-        if (prev) {
-          const d = item.weight - prev.weight;
-          const cls = d > 0 ? 'delta-up' : 'delta-down';
-          delta = `<span class="history-delta ${cls}">${d > 0 ? '+' : ''}${d.toFixed(1)} kg</span>`;
-        }
+      wList.innerHTML = workouts.map((wo, idx) => {
+        const realIdx = state.workouts.length - 1 - idx;
+        const analysis = analyzeWorkout(wo);
+        const hasBA = wo.before?.weight != null || wo.after?.weight != null || wo.waterMl != null;
         return `
-          <div class="history-item">
-            <div>
-              <div class="history-weight">${item.weight.toFixed(1)} kg</div>
-              <div class="history-date">${new Date(item.date).toLocaleDateString('pt-PT')}</div>
+          <div style="padding:12px 0;border-bottom:1px solid var(--border);">
+            <div class="history-item" style="border:none;padding:0;">
+              <div>
+                <div class="history-weight" style="font-size:0.95rem;">${wo.type || 'Treino'}</div>
+                <div class="history-date">${new Date(wo.date).toLocaleDateString('pt-PT')}${wo.durationMin ? ' · ' + wo.durationMin + ' min' : ''}${wo.distanceKm != null ? ' · ' + wo.distanceKm + ' km' : ''}${wo.waterMl != null ? ' · 💧 ' + wo.waterMl + ' ml' : ''}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.85rem;color:var(--text-muted);">${wo.calories ? wo.calories + ' kcal' : ''}${wo.avgHr ? '<br>FC ' + wo.avgHr : ''}</div>
+                <div style="display:flex;gap:4px;justify-content:flex-end;margin-top:6px;">
+                  <button type="button" class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:0.75rem;" onclick="editWorkout(${realIdx})">Editar</button>
+                  <button type="button" class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:0.75rem;" onclick="deleteWorkout(${realIdx})">Apagar</button>
+                </div>
+              </div>
             </div>
-            <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
-              ${delta}
-              <button class="btn btn-ghost btn-sm" style="padding:4px 10px; font-size:0.75rem;" onclick="deleteWeighing(${realIdx})">Apagar</button>
-            </div>
-          </div>
-        `;
+            ${hasBA ? `
+            <div style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);line-height:1.5;background:#0d1829;border-radius:10px;padding:10px 12px;">
+              <strong style="color:var(--info);">Análise antes → depois</strong><br>
+              ${wo.before?.weight != null || wo.after?.weight != null ? `Peso: ${wo.before?.weight != null ? wo.before.weight.toFixed(1) : '—'} → ${wo.after?.weight != null ? wo.after.weight.toFixed(1) : '—'} kg<br>` : ''}
+              <span style="color:var(--text);">${analysis}</span>
+            </div>` : (analysis ? `<div style="margin-top:6px;font-size:0.78rem;color:var(--text-dim);">${analysis}</div>` : '')}
+          </div>`;
       }).join('');
     }
 
@@ -2138,13 +2649,23 @@
       });
     });
 
+    function setChartMetric(metric) {
+      chartMetric = metric || 'weight';
+      document.querySelectorAll('.mini-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.metric === chartMetric);
+      });
+      const sel = document.getElementById('chartMetricSelect');
+      if (sel && sel.value !== chartMetric) sel.value = chartMetric;
+      renderChart();
+    }
+
     document.getElementById('chartTabs')?.addEventListener('click', e => {
       const tab = e.target.closest('.mini-tab');
       if (!tab) return;
-      document.querySelectorAll('.mini-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      chartMetric = tab.dataset.metric;
-      renderChart();
+      setChartMetric(tab.dataset.metric);
+    });
+    document.getElementById('chartMetricSelect')?.addEventListener('change', e => {
+      setChartMetric(e.target.value);
     });
 
     document.getElementById('btnProfile').addEventListener('click', () => {
@@ -2296,6 +2817,121 @@
       showToast('Pesagem apagada');
       refreshAll();
     };
+
+    window.deleteWorkout = function(idx) {
+      if (!confirm('Apagar este treino?')) return;
+      state.workouts.splice(idx, 1);
+      save(state);
+      showToast('Treino apagado');
+      refreshAll();
+    };
+
+    const numOrNull = (id) => {
+      const v = document.getElementById(id).value;
+      return v === '' ? null : parseFloat(v);
+    };
+
+    window.editWeighing = function(idx) {
+      const item = state.weighings[idx];
+      if (!item) return;
+      document.getElementById('ewIdx').value = idx;
+      document.getElementById('ewDate').value = item.date;
+      document.getElementById('ewWeight').value = item.weight ?? '';
+      document.getElementById('ewFat').value = item.fat ?? '';
+      document.getElementById('ewMuscle').value = item.muscle ?? '';
+      document.getElementById('ewWater').value = item.water ?? '';
+      document.getElementById('ewBone').value = item.bone ?? '';
+      document.getElementById('ewVisceral').value = item.visceral ?? '';
+      document.getElementById('editWeighModal').classList.add('open');
+    };
+
+    window.editWorkout = function(idx) {
+      const wo = state.workouts[idx];
+      if (!wo) return;
+      document.getElementById('ewoIdx').value = idx;
+      document.getElementById('ewoDate').value = wo.date;
+      const typeSel = document.getElementById('ewoType');
+      const t = wo.type || 'Outro';
+      if (![...typeSel.options].some(o => o.value === t)) {
+        const opt = document.createElement('option');
+        opt.value = t; opt.textContent = t;
+        typeSel.appendChild(opt);
+      }
+      typeSel.value = t;
+      document.getElementById('ewoDuration').value = wo.durationMin ?? '';
+      document.getElementById('ewoDistance').value = wo.distanceKm ?? '';
+      document.getElementById('ewoCalories').value = wo.calories ?? '';
+      document.getElementById('ewoAvgHr').value = wo.avgHr ?? '';
+      document.getElementById('ewoWaterMl').value = wo.waterMl ?? '';
+      document.getElementById('ewoNotes').value = wo.notes ?? '';
+      document.getElementById('editWorkoutModal').classList.add('open');
+    };
+
+    document.getElementById('closeEditWeigh')?.addEventListener('click', () => {
+      document.getElementById('editWeighModal').classList.remove('open');
+    });
+    document.getElementById('closeEditWorkout')?.addEventListener('click', () => {
+      document.getElementById('editWorkoutModal').classList.remove('open');
+    });
+    document.getElementById('editWeighModal')?.addEventListener('click', e => {
+      if (e.target.id === 'editWeighModal') e.target.classList.remove('open');
+    });
+    document.getElementById('editWorkoutModal')?.addEventListener('click', e => {
+      if (e.target.id === 'editWorkoutModal') e.target.classList.remove('open');
+    });
+
+    document.getElementById('editWeighForm')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const idx = parseInt(document.getElementById('ewIdx').value, 10);
+      if (isNaN(idx) || !state.weighings[idx]) return;
+      state.weighings[idx] = {
+        ...state.weighings[idx],
+        date: document.getElementById('ewDate').value,
+        weight: parseFloat(document.getElementById('ewWeight').value),
+        fat: numOrNull('ewFat'),
+        muscle: numOrNull('ewMuscle'),
+        water: numOrNull('ewWater'),
+        bone: numOrNull('ewBone'),
+        visceral: numOrNull('ewVisceral')
+      };
+      state.weighings.sort((a, b) => a.date.localeCompare(b.date));
+      save(state);
+      document.getElementById('editWeighModal').classList.remove('open');
+      showToast('Pesagem atualizada');
+      refreshAll();
+    });
+
+    document.getElementById('editWorkoutForm')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const idx = parseInt(document.getElementById('ewoIdx').value, 10);
+      if (isNaN(idx) || !state.workouts[idx]) return;
+      state.workouts[idx] = {
+        ...state.workouts[idx],
+        date: document.getElementById('ewoDate').value,
+        type: document.getElementById('ewoType').value,
+        durationMin: numOrNull('ewoDuration'),
+        distanceKm: numOrNull('ewoDistance'),
+        calories: numOrNull('ewoCalories'),
+        avgHr: numOrNull('ewoAvgHr'),
+        waterMl: numOrNull('ewoWaterMl'),
+        notes: document.getElementById('ewoNotes').value.trim() || null
+      };
+      state.workouts.sort((a, b) => a.date.localeCompare(b.date));
+      save(state);
+      document.getElementById('editWorkoutModal').classList.remove('open');
+      showToast('Treino atualizado');
+      refreshAll();
+    });
+
+    document.getElementById('historyTabs')?.addEventListener('click', e => {
+      const tab = e.target.closest('.mini-tab');
+      if (!tab) return;
+      document.querySelectorAll('#historyTabs .mini-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const mode = tab.dataset.hist;
+      document.getElementById('historyWeighingsBlock').style.display = mode === 'weighings' ? '' : 'none';
+      document.getElementById('historyWorkoutsBlock').style.display = mode === 'workouts' ? '' : 'none';
+    });
 
     document.getElementById('wDate').value = new Date().toISOString().slice(0, 10);
     document.getElementById('woDate').value = new Date().toISOString().slice(0, 10);

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bodymetrics-v1';
+const CACHE_NAME = 'bodymetrics-v5';
 const ASSETS = [
   './',
   './index.html',
