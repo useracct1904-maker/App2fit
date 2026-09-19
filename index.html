@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a1628" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="BodyMetrics – Transforme as suas pesagens em ciência do corpo. Métricas avançadas e análise por IA." />
+  <title>BodyMetrics · Painel da balança</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a1628;
+      --bg-card: #111c2e;
+      --bg-elevated: #162235;
+      --accent: #22c55e;
+      --accent-dim: #16a34a;
+      --accent-glow: rgba(34, 197, 94, 0.15);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --border: #1e293b;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #38bdf8;
+      --purple: #a78bfa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    body { padding-bottom: env(safe-area-inset-bottom); }
+
+    /* Header */
+    .header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(10,22,40,0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; }
+    .logo svg { width: 28px; height: 28px; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 0.9rem;
+      border: none; cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-primary { background: var(--accent); color: #052e16; }
+    .btn-primary:hover, .btn-primary:active { background: var(--accent-dim); transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg-card); color: var(--text); border-color: #334155; }
+    .btn-sm { padding: 8px 12px; font-size: 0.85rem; border-radius: 10px; }
+    .btn-outline-accent {
+      background: transparent; color: var(--accent); border: 1px solid var(--accent);
+    }
+    .btn-outline-accent:hover { background: var(--accent-glow); }
+
+    /* Layout */
+    .container { max-width: 640px; margin: 0 auto; padding: 16px; }
+    .section { margin-bottom: 28px; }
+    .section-title {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-dim); margin-bottom: 12px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .card-grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 12px;
+      text-align: center;
+      transition: transform 0.15s, border-color 0.2s;
+    }
+    .metric-card:active { transform: scale(0.98); }
+    .metric-value { font-size: 1.45rem; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+    .metric-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+    .metric-sub { font-size: 0.68rem; color: var(--text-dim); margin-top: 3px; }
+
+    /* Forms */
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+    input, select {
+      width: 100%; padding: 13px 14px; border-radius: 12px;
+      background: #0d1829; border: 1px solid var(--border); color: var(--text);
+      font-size: 1rem; outline: none; transition: border 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input::placeholder { color: var(--text-dim); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Tabs / Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(10,22,40,0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around;
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 6px 14px; color: var(--text-dim); font-size: 0.68rem;
+      background: none; border: none; cursor: pointer; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item svg { width: 22px; height: 22px; }
+
+    /* Pages */
+    .page { display: none; padding-bottom: 90px; animation: fadeIn 0.25s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    /* AI Insights */
+    .insight-card {
+      background: linear-gradient(145deg, #0f1f35 0%, #0f2a1c 100%);
+      border: 1px solid #1e3a2f;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .insight-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .insight-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .insight-title { font-weight: 650; font-size: 1rem; letter-spacing: -0.01em; }
+    .insight-body { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* History list */
+    .history-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-date { font-size: 0.82rem; color: var(--text-muted); }
+    .history-weight { font-weight: 650; font-size: 1.08rem; letter-spacing: -0.01em; }
+    .history-delta { font-size: 0.8rem; font-weight: 600; }
+    .delta-up { color: var(--danger); }
+    .delta-down { color: var(--accent); }
+
+    /* Empty state */
+    .empty {
+      text-align: center; padding: 48px 20px; color: var(--text-muted);
+    }
+    .empty svg { width: 52px; height: 52px; margin-bottom: 14px; opacity: 0.4; }
+    .empty p { font-size: 0.95rem; line-height: 1.5; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+      z-index: 100; display: none; align-items: flex-end; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-card); border-radius: 24px 24px 0 0;
+      width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
+      padding: 24px 18px calc(24px + env(safe-area-inset-bottom));
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--accent); color: #052e16; padding: 14px 22px;
+      border-radius: 14px; font-weight: 600; font-size: 0.9rem;
+      z-index: 200; opacity: 0; transition: all 0.3s ease; pointer-events: none;
+      box-shadow: 0 8px 24px rgba(34,197,94,0.3);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Chart */
+    .chart-wrap { position: relative; height: 230px; margin-top: 8px; }
+
+    /* Profile banner */
+    .profile-banner {
+      background: linear-gradient(135deg, #0f1f35 0%, #0d2a1a 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .profile-name { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
+    .profile-meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* Install banner */
+    #installBanner {
+      display: none;
+      background: linear-gradient(90deg, #166534, #15803d);
+      color: white; padding: 12px 16px; text-align: center;
+      font-size: 0.9rem; font-weight: 500;
+    }
+    #installBanner button {
+      margin-left: 10px; background: white; color: #166534;
+      border: none; padding: 7px 16px; border-radius: 10px; font-weight: 600; cursor: pointer;
+    }
+
+    /* Import zone */
+    .import-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 28px 16px;
+      text-align: center;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    .import-zone:hover, .import-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .import-zone input[type="file"] { display: none; }
+    .import-icon { font-size: 2rem; margin-bottom: 8px; }
+    .import-text { font-size: 0.9rem; color: var(--text-muted); }
+    .import-hint { font-size: 0.75rem; color: var(--text-dim); margin-top: 6px; }
+
+    /* Last weighing highlight */
+    .last-weight-value {
+      font-size: 2.4rem; font-weight: 800; color: var(--accent);
+      letter-spacing: -0.03em; line-height: 1.1;
+    }
+    .last-weight-unit { font-size: 1.1rem; color: var(--text-muted); font-weight: 500; }
+
+    /* Badge */
+    .badge {
+      display: inline-block; padding: 3px 8px; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 600;
+    }
+    .badge-ok { background: rgba(34,197,94,0.15); color: var(--accent); }
+    .badge-warn { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .badge-danger { background: rgba(239,68,68,0.15); color: var(--danger); }
+    .badge-info { background: rgba(56,189,248,0.15); color: var(--info); }
+    .badge-elite { background: rgba(167,139,250,0.18); color: var(--purple); }
+
+    /* Color scale bar */
+    .scale-bar {
+      display: flex; height: 6px; border-radius: 3px; overflow: hidden;
+      margin-top: 8px; gap: 1px;
+    }
+    .scale-bar span { flex: 1; opacity: 0.35; }
+    .scale-bar span.active { opacity: 1; box-shadow: 0 0 0 1px rgba(255,255,255,0.25); }
+    .metric-card .metric-value.scale-ok { color: var(--accent); }
+    .metric-card .metric-value.scale-warn { color: var(--warning); }
+    .metric-card .metric-value.scale-danger { color: var(--danger); }
+    .metric-card .metric-value.scale-info { color: var(--info); }
+    .metric-card .metric-value.scale-elite { color: var(--purple); }
+
+    .legend-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 14px 16px; margin-bottom: 10px;
+    }
+    .legend-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;
+    }
+    .legend-row:last-child { margin-bottom: 0; }
+    .legend-swatch {
+      width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0;
+    }
+    .legend-ref {
+      font-size: 0.7rem; color: var(--text-dim); margin-top: 8px; line-height: 1.4;
+    }
+
+    @media print {
+      .header, .bottom-nav, .install-banner, #toast, .btn, nav { display: none !important; }
+      body { background: #fff; color: #111; }
+      .page { display: none !important; }
+      #printReport { display: block !important; }
+      .metric-card, .legend-card, .card { border: 1px solid #ccc; break-inside: avoid; }
+    }
+    #printReport { display: none; }
+
+    /* Connections */
+    .conn-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .conn-logo {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; flex-shrink: 0;
+    }
+    .conn-info { flex: 1; min-width: 0; }
+    .conn-name { font-weight: 650; font-size: 0.95rem; }
+    .conn-status { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+    .conn-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .conn-note {
+      font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;
+      padding: 12px 14px; background: #0d1829; border-radius: 12px; margin-top: 8px;
+    }
+
+    /* Tabs inside page */
+    .mini-tabs {
+      display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .mini-tab {
+      padding: 7px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 550;
+      background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+      cursor: pointer; white-space: nowrap; transition: all 0.2s;
+    }
+    .mini-tab.active {
+      background: var(--accent); color: #052e16; border-color: var(--accent);
+    }
+
+    @media (min-width: 640px) {
+      .modal { border-radius: 24px; margin-bottom: 40px; }
+      .modal-overlay { align-items: center; }
+      .card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div id="installBanner">
+    Instale a app no ecrã inicial
+    <button id="installBtn">Instalar</button>
+  </div>
+
+  <header class="header">
+    <div class="logo">
+      <svg viewBox="0 0 32 32" fill="none"><path d="M8 22c0-6 4-10 8-10s8 4 8 10" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="10" r="3" fill="#22c55e"/></svg>
+      BodyMetrics
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" id="btnProfile" title="Perfil">Perfil</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- PAGE: Dashboard -->
+    <div id="page-dashboard" class="page active">
+      <div class="profile-banner" id="profileBanner">
+        <div class="profile-name" id="dashName">Olá!</div>
+        <div class="profile-meta" id="dashMeta">Configure o seu perfil para começar</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Última pesagem</div>
+        <div id="lastWeighing" class="card">
+          <div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M5 10l7-7 7 7"/></svg>
+            <p>Ainda não tem pesagens.<br>Toque em + para registar ou importe um CSV.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Métricas principais</div>
+        <div class="card-grid" id="metricsGrid">
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">IMC</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">FFMI</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">BMR</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">TDEE</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Composição corporal</div>
+        <div class="card-grid-3" id="compGrid">
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">FMI</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Massa magra</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">% Músculo</div></div>
+        </div>
+      </div>
+
+      <div class="section" id="scaleLegendSection">
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Escalas de cores</span>
+          <button type="button" class="btn btn-sm btn-outline-accent" id="btnExportPdf">Exportar PDF</button>
+        </div>
+        <div id="scaleLegend"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Atividade física</div>
+        <div class="card-grid" id="activityGrid">
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Passos (hoje)</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Treinos (7d)</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">kcal ativas</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Distância</div></div>
+        </div>
+        <div class="card" id="recentWorkouts" style="margin-top:10px;">
+          <div class="empty" style="padding:20px;"><p style="font-size:0.85rem;">Importe CSV/GPX da Zepp ou registe treinos.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Evolução do peso</div>
+        <div class="card">
+          <div class="mini-tabs" id="chartTabs">
+            <button class="mini-tab active" data-metric="weight">Peso</button>
+            <button class="mini-tab" data-metric="fat">% Gordura</button>
+            <button class="mini-tab" data-metric="muscle">Músculo</button>
+          </div>
+          <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Análise por IA</div>
+        <div id="aiInsights">
+          <div class="empty"><p>Registe pelo menos uma pesagem para receber insights.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: History -->
+    <div id="page-history" class="page">
+      <div class="section">
+        <div class="section-title">Histórico de pesagens</div>
+        <div class="card" id="historyList">
+          <div class="empty"><p>Sem registos ainda.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Add -->
+    <div id="page-add" class="page">
+      <div class="section">
+        <div class="section-title">Importar ficheiro CSV</div>
+        <div class="import-zone" id="importZone">
+          <input type="file" id="csvFile" accept=".csv,.txt,.gpx,text/csv,application/gpx+xml" multiple />
+          <div class="import-icon">📄</div>
+          <div class="import-text">Toque para escolher CSV ou GPX</div>
+          <div class="import-hint">Zepp/Amazfit (exportação CSV + GPX) · Runstar · Fitbit · Xiaomi · Renpho</div>
+        </div>
+        <div id="importResult" style="display:none; margin-bottom:16px;"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Ou registe manualmente</div>
+        <div class="card">
+          <form id="weighForm">
+            <div class="form-group">
+              <label>Data</label>
+              <input type="date" id="wDate" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Peso (kg)</label>
+                <input type="number" id="wWeight" step="0.1" min="30" max="300" required placeholder="78.5" />
+              </div>
+              <div class="form-group">
+                <label>% Gordura</label>
+                <input type="number" id="wFat" step="0.1" min="3" max="60" placeholder="18.2" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Massa muscular (kg)</label>
+                <input type="number" id="wMuscle" step="0.1" min="10" max="100" placeholder="35.0" />
+              </div>
+              <div class="form-group">
+                <label>% Água</label>
+                <input type="number" id="wWater" step="0.1" min="30" max="80" placeholder="55.0" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Massa óssea (kg)</label>
+                <input type="number" id="wBone" step="0.1" min="1" max="10" placeholder="3.2" />
+              </div>
+              <div class="form-group">
+                <label>Gordura visceral</label>
+                <input type="number" id="wVisceral" step="1" min="1" max="30" placeholder="8" />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px; padding:14px;">Guardar pesagem</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Registar treino (antes / depois)</div>
+        <div class="card">
+          <form id="workoutForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Data do treino</label>
+                <input type="date" id="woDate" required />
+              </div>
+              <div class="form-group">
+                <label>Tipo</label>
+                <select id="woType">
+                  <option value="Força">Força</option>
+                  <option value="Corrida">Corrida</option>
+                  <option value="Caminhada">Caminhada</option>
+                  <option value="Ciclismo">Ciclismo</option>
+                  <option value="HIIT">HIIT</option>
+                  <option value="Natação">Natação</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Duração (min)</label>
+                <input type="number" id="woDuration" min="1" max="600" placeholder="45" />
+              </div>
+              <div class="form-group">
+                <label>Distância (km)</label>
+                <input type="number" id="woDistance" step="0.1" min="0" placeholder="5.0" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>kcal estimadas</label>
+                <input type="number" id="woCalories" min="0" placeholder="350" />
+              </div>
+              <div class="form-group">
+                <label>FC média</label>
+                <input type="number" id="woAvgHr" min="40" max="220" placeholder="145" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Água ingerida durante o treino (ml)</label>
+              <input type="number" id="woWaterMl" min="0" max="5000" step="50" placeholder="Ex: 500" />
+            </div>
+            <div class="section-title" style="margin-top:8px; margin-bottom:10px;">Composição corporal — Antes</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Peso antes (kg)</label>
+                <input type="number" id="woWeightBefore" step="0.1" min="30" max="300" placeholder="80.5" />
+              </div>
+              <div class="form-group">
+                <label>% Gordura antes</label>
+                <input type="number" id="woFatBefore" step="0.1" min="3" max="60" placeholder="18.0" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Músculo antes (kg)</label>
+                <input type="number" id="woMuscleBefore" step="0.1" placeholder="36.5" />
+              </div>
+              <div class="form-group">
+                <label>% Água corporal antes</label>
+                <input type="number" id="woBodyWaterBefore" step="0.1" placeholder="55.0" />
+              </div>
+            </div>
+            <div class="section-title" style="margin-top:8px; margin-bottom:10px;">Composição corporal — Depois</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Peso depois (kg)</label>
+                <input type="number" id="woWeightAfter" step="0.1" min="30" max="300" placeholder="80.2" />
+              </div>
+              <div class="form-group">
+                <label>% Gordura depois</label>
+                <input type="number" id="woFatAfter" step="0.1" min="3" max="60" placeholder="17.9" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Músculo depois (kg)</label>
+                <input type="number" id="woMuscleAfter" step="0.1" placeholder="36.6" />
+              </div>
+              <div class="form-group">
+                <label>% Água corporal depois</label>
+                <input type="number" id="woBodyWaterAfter" step="0.1" placeholder="54.5" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Notas (opcional)</label>
+              <input type="text" id="woNotes" placeholder="Ex: treino de pernas, sensação boa" />
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px; padding:14px;">Guardar treino + análise</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Insights -->
+    <div id="page-insights" class="page">
+      <div class="section">
+        <div class="section-title">Relatórios de inteligência artificial</div>
+        <div id="fullInsights">
+          <div class="empty"><p>Precisa de dados para gerar análises.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Connections -->
+    <div id="page-connections" class="page">
+      <div class="section">
+        <div class="section-title">Ligações de saúde</div>
+
+        <!-- Fitbit -->
+        <div class="conn-card">
+          <div class="conn-logo" style="background:#00B0B9;">⌚</div>
+          <div class="conn-info">
+            <div class="conn-name">Fitbit</div>
+            <div class="conn-status" id="fitbitStatus">Não ligado</div>
+          </div>
+          <div class="conn-actions">
+            <button class="btn btn-sm btn-primary" id="btnFitbitConnect">Ligar</button>
+            <button class="btn btn-sm btn-ghost" id="btnFitbitSync" style="display:none;">Sincronizar</button>
+            <button class="btn btn-sm btn-ghost" id="btnFitbitDisconnect" style="display:none;">Sair</button>
+          </div>
+        </div>
+
+        <!-- Google Fit -->
+        <div class="conn-card">
+          <div class="conn-logo" style="background:#4285F4;">📊</div>
+          <div class="conn-info">
+            <div class="conn-name">Google Fit</div>
+            <div class="conn-status">API em descontinuação</div>
+          </div>
+          <div class="conn-actions">
+            <button class="btn btn-sm btn-ghost" disabled title="Use CSV ou Health Connect">Indisponível</button>
+          </div>
+        </div>
+
+        <!-- Apple Health -->
+        <div class="conn-card">
+          <div class="conn-logo" style="background:#FF2D55;">❤️</div>
+          <div class="conn-info">
+            <div class="conn-name">Apple Health</div>
+            <div class="conn-status">Apenas em apps nativas iOS</div>
+          </div>
+          <div class="conn-actions">
+            <button class="btn btn-sm btn-ghost" disabled>Indisponível</button>
+          </div>
+        </div>
+
+        <!-- Amazfit / Zepp -->
+        <div class="conn-card">
+          <div class="conn-logo" style="background:#FF6B00;">⌚</div>
+          <div class="conn-info">
+            <div class="conn-name">Amazfit / Zepp</div>
+            <div class="conn-status">Via exportação CSV + GPX</div>
+          </div>
+          <div class="conn-actions">
+            <button class="btn btn-sm btn-outline-accent" onclick="document.querySelector('[data-page=add]').click()">Importar</button>
+          </div>
+        </div>
+
+        <div class="conn-note">
+          <strong>Como funciona</strong><br>
+          • <strong>Fitbit</strong>: ligação direta via OAuth. Crie app em <em>dev.fitbit.com</em> e cole o Client ID.<br>
+          • <strong>Amazfit / Zepp</strong>: não há API pública simples para web. Na app Zepp: <em>Perfil → Definições → Direitos do utilizador → Exportar dados</em> (ZIP com CSV). Treinos individuais: exportar GPX. Depois importe na página Adicionar.<br>
+          • <strong>Google Fit</strong>: API Web em descontinuação. Use CSV ou Health Connect.<br>
+          • <strong>Apple Health</strong>: bloqueado em websites/PWAs.<br>
+          • <strong>Balanças</strong>: CSV (Runstar, Xiaomi, Renpho, etc.).
+        </div>
+      </div>
+
+      <div class="section" id="fitbitConfigSection" style="display:none;">
+        <div class="section-title">Configuração Fitbit</div>
+        <div class="card">
+          <div class="form-group">
+            <label>Client ID (da sua app em dev.fitbit.com)</label>
+            <input type="text" id="fitbitClientId" placeholder="Ex: 23ABC D" />
+          </div>
+          <div class="form-group">
+            <label>Redirect URI (deve coincidir com a da app Fitbit)</label>
+            <input type="text" id="fitbitRedirect" readonly />
+          </div>
+          <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:12px;">
+            1. Vá a <strong>dev.fitbit.com/apps</strong> → Register a new app<br>
+            2. OAuth 2.0 Application Type: <strong>Client</strong><br>
+            3. Callback URL: copie o Redirect URI acima<br>
+            4. Scopes: weight, profile<br>
+            5. Cole o Client ID e clique em Ligar
+          </p>
+          <button class="btn btn-primary" style="width:100%;" id="btnSaveFitbitConfig">Guardar e Ligar</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-page="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Painel
+    </button>
+    <button class="nav-item" data-page="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+      Histórico
+    </button>
+    <button class="nav-item" data-page="add">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Adicionar
+    </button>
+    <button class="nav-item" data-page="insights">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4c0 1.5-1 3-2 4l2 2a6 6 0 01-8 0l2-2c-1-1-2-2.5-2-4a4 4 0 014-4z"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+      IA
+    </button>
+    <button class="nav-item" data-page="connections">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      Ligações
+    </button>
+  </nav>
+
+  <!-- Profile Modal -->
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">O seu perfil</div>
+        <button class="btn btn-ghost btn-sm" id="closeProfile">Fechar</button>
+      </div>
+      <form id="profileForm">
+        <div class="form-group">
+          <label>Nome</label>
+          <input type="text" id="pName" placeholder="O seu nome" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Idade</label>
+            <input type="number" id="pAge" min="10" max="100" placeholder="32" />
+          </div>
+          <div class="form-group">
+            <label>Sexo</label>
+            <select id="pSex">
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Altura (cm)</label>
+          <input type="number" id="pHeight" min="100" max="250" placeholder="175" required />
+        </div>
+        <div class="form-group">
+          <label>Nível de atividade</label>
+          <select id="pActivity">
+            <option value="1.2">Sedentário (pouco ou nenhum exercício)</option>
+            <option value="1.375">Ligeiro (1-3 dias/semana)</option>
+            <option value="1.55" selected>Moderado (3-5 dias/semana)</option>
+            <option value="1.725">Intenso (6-7 dias/semana)</option>
+            <option value="1.9">Muito intenso (2x/dia)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:14px;">Guardar perfil</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ========== Storage ==========
+    const STORAGE_KEY = 'bodymetrics_v1';
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        return {
+          profile: d.profile || null,
+          weighings: d.weighings || [],
+          connections: d.connections || {},
+          activities: d.activities || [],
+          workouts: d.workouts || []
+        };
+      } catch {
+        return { profile: null, weighings: [], connections: {}, activities: [], workouts: [] };
+      }
+    }
+    function save(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+    let state = load();
+    if (!state.connections) state.connections = {};
+    if (!state.activities) state.activities = [];
+    if (!state.workouts) state.workouts = [];
+    let chartMetric = 'weight';
+
+    // ========== Fitbit OAuth (PKCE) ==========
+    const FITBIT_AUTH = 'https://www.fitbit.com/oauth2/authorize';
+    const FITBIT_TOKEN = 'https://api.fitbit.com/oauth2/token';
+    const FITBIT_API = 'https://api.fitbit.com/1/user/-';
+
+    function getRedirectUri() {
+      return window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') || window.location.origin + '/';
+    }
+
+    function base64UrlEncode(buffer) {
+      return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    async function generatePKCE() {
+      const verifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+      const challenge = base64UrlEncode(digest);
+      return { verifier, challenge };
+    }
+
+    function updateFitbitUI() {
+      const conn = state.connections.fitbit;
+      const statusEl = document.getElementById('fitbitStatus');
+      const btnConnect = document.getElementById('btnFitbitConnect');
+      const btnSync = document.getElementById('btnFitbitSync');
+      const btnDisconnect = document.getElementById('btnFitbitDisconnect');
+      const configSection = document.getElementById('fitbitConfigSection');
+
+      if (conn && conn.accessToken) {
+        statusEl.textContent = 'Ligado' + (conn.userName ? ` · ${conn.userName}` : '');
+        statusEl.style.color = 'var(--accent)';
+        btnConnect.style.display = 'none';
+        btnSync.style.display = '';
+        btnDisconnect.style.display = '';
+        configSection.style.display = 'none';
+      } else {
+        statusEl.textContent = 'Não ligado';
+        statusEl.style.color = '';
+        btnConnect.style.display = '';
+        btnSync.style.display = 'none';
+        btnDisconnect.style.display = 'none';
+      }
+
+      document.getElementById('fitbitRedirect').value = getRedirectUri();
+      document.getElementById('fitbitClientId').value = conn?.clientId || '';
+    }
+
+    async function startFitbitAuth() {
+      let clientId = state.connections.fitbit?.clientId;
+      if (!clientId) {
+        document.getElementById('fitbitConfigSection').style.display = 'block';
+        document.getElementById('fitbitRedirect').value = getRedirectUri();
+        showToast('Configure primeiro o Client ID');
+        return;
+      }
+
+      const { verifier, challenge } = await generatePKCE();
+      sessionStorage.setItem('fitbit_pkce_verifier', verifier);
+      sessionStorage.setItem('fitbit_client_id', clientId);
+
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        redirect_uri: getRedirectUri(),
+        scope: 'weight profile',
+        code_challenge: challenge,
+        code_challenge_method: 'S256'
+      });
+      window.location.href = `${FITBIT_AUTH}?${params}`;
+    }
+
+    async function handleFitbitCallback() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (!code) return false;
+
+      const verifier = sessionStorage.getItem('fitbit_pkce_verifier');
+      const clientId = sessionStorage.getItem('fitbit_client_id') || state.connections.fitbit?.clientId;
+      if (!verifier || !clientId) {
+        showToast('Erro de autenticação Fitbit');
+        return true;
+      }
+
+      try {
+        const body = new URLSearchParams({
+          client_id: clientId,
+          grant_type: 'authorization_code',
+          redirect_uri: getRedirectUri(),
+          code,
+          code_verifier: verifier
+        });
+        const res = await fetch(FITBIT_TOKEN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        });
+        if (!res.ok) throw new Error('Token falhou');
+        const tokens = await res.json();
+
+        state.connections.fitbit = {
+          clientId,
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+          expiresAt: Date.now() + (tokens.expires_in * 1000)
+        };
+
+        // Fetch profile name
+        try {
+          const prof = await fetch(`${FITBIT_API}/profile.json`, {
+            headers: { Authorization: `Bearer ${tokens.access_token}` }
+          }).then(r => r.json());
+          state.connections.fitbit.userName = prof.user?.displayName || prof.user?.fullName;
+        } catch {}
+
+        save(state);
+        sessionStorage.removeItem('fitbit_pkce_verifier');
+        sessionStorage.removeItem('fitbit_client_id');
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+        showToast('Fitbit ligado com sucesso');
+        updateFitbitUI();
+        return true;
+      } catch (err) {
+        console.error(err);
+        showToast('Falha ao ligar Fitbit');
+        return true;
+      }
+    }
+
+    async function refreshFitbitToken() {
+      const conn = state.connections.fitbit;
+      if (!conn?.refreshToken) return false;
+      try {
+        const body = new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: conn.refreshToken,
+          client_id: conn.clientId
+        });
+        const res = await fetch(FITBIT_TOKEN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        });
+        if (!res.ok) throw new Error('Refresh failed');
+        const tokens = await res.json();
+        conn.accessToken = tokens.access_token;
+        conn.refreshToken = tokens.refresh_token || conn.refreshToken;
+        conn.expiresAt = Date.now() + (tokens.expires_in * 1000);
+        save(state);
+        return true;
+      } catch {
+        delete state.connections.fitbit;
+        save(state);
+        updateFitbitUI();
+        return false;
+      }
+    }
+
+    async function getFitbitToken() {
+      const conn = state.connections.fitbit;
+      if (!conn?.accessToken) return null;
+      if (Date.now() > (conn.expiresAt - 60000)) {
+        const ok = await refreshFitbitToken();
+        if (!ok) return null;
+      }
+      return state.connections.fitbit.accessToken;
+    }
+
+    async function syncFitbit() {
+      const token = await getFitbitToken();
+      if (!token) {
+        showToast('Sessão Fitbit expirada. Volte a ligar.');
+        updateFitbitUI();
+        return;
+      }
+
+      showToast('A sincronizar Fitbit…');
+      try {
+        // Last 30 days of weight
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 30);
+        const startStr = start.toISOString().slice(0, 10);
+        const endStr = end.toISOString().slice(0, 10);
+
+        const res = await fetch(`${FITBIT_API}/body/log/weight/date/${startStr}/${endStr}.json`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('API error ' + res.status);
+        const data = await res.json();
+        const logs = data.weight || [];
+
+        let added = 0;
+        const existing = new Set(state.weighings.map(w => `${w.date}_${w.weight}`));
+
+        for (const log of logs) {
+          const date = log.date;
+          const weight = log.weight;
+          if (!date || !weight) continue;
+          const key = `${date}_${weight}`;
+          if (existing.has(key)) continue;
+
+          state.weighings.push({
+            date,
+            weight,
+            fat: log.fat ?? null,
+            muscle: null,
+            water: null,
+            bone: null,
+            visceral: null,
+            source: 'fitbit'
+          });
+          existing.add(key);
+          added++;
+        }
+
+        state.weighings.sort((a, b) => a.date.localeCompare(b.date));
+        save(state);
+        showToast(added ? `${added} pesagens sincronizadas` : 'Sem novas pesagens');
+        refreshAll();
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao sincronizar Fitbit');
+      }
+    }
+
+    function disconnectFitbit() {
+      if (!confirm('Desligar conta Fitbit?')) return;
+      delete state.connections.fitbit;
+      save(state);
+      updateFitbitUI();
+      showToast('Fitbit desligado');
+    }
+
+    // ========== Calculations ==========
+    function calcBMI(weight, heightCm) {
+      const h = heightCm / 100;
+      return weight / (h * h);
+    }
+    function calcFFMI(weight, heightCm, bodyFatPct) {
+      if (bodyFatPct == null) return null;
+      const lean = weight * (1 - bodyFatPct / 100);
+      const h = heightCm / 100;
+      return lean / (h * h);
+    }
+    function calcBMR(weight, heightCm, age, sex) {
+      if (sex === 'M') return 10 * weight + 6.25 * heightCm - 5 * age + 5;
+      return 10 * weight + 6.25 * heightCm - 5 * age - 161;
+    }
+    function calcTDEE(bmr, activity) {
+      return bmr * parseFloat(activity || 1.55);
+    }
+    function fatMassIndex(weight, heightCm, bodyFatPct) {
+      if (bodyFatPct == null) return null;
+      const fatMass = weight * (bodyFatPct / 100);
+      const h = heightCm / 100;
+      return fatMass / (h * h);
+    }
+    function leanMass(weight, bodyFatPct) {
+      if (bodyFatPct == null) return null;
+      return weight * (1 - bodyFatPct / 100);
+    }
+    function musclePct(weight, muscleKg) {
+      if (!muscleKg || !weight) return null;
+      return (muscleKg / weight) * 100;
+    }
+    /* Escalas de cores com referências científicas (OMS, ACE, Kouri et al.) */
+    const METRIC_SCALES = {
+      bmi: {
+        name: 'IMC',
+        unit: 'kg/m²',
+        ref: 'OMS / WHO (2000, 2019)',
+        levels: [
+          { max: 18.5, text: 'Baixo peso', badge: 'badge-info', tone: 'info', color: '#38bdf8' },
+          { max: 25, text: 'Normal', badge: 'badge-ok', tone: 'ok', color: '#22c55e' },
+          { max: 30, text: 'Excesso de peso', badge: 'badge-warn', tone: 'warn', color: '#f59e0b' },
+          { max: Infinity, text: 'Obesidade', badge: 'badge-danger', tone: 'danger', color: '#ef4444' }
+        ]
+      },
+      fat: {
+        name: '% Gordura',
+        unit: '%',
+        ref: 'ACE — American Council on Exercise',
+        levelsM: [
+          { max: 6, text: 'Essencial', badge: 'badge-info', tone: 'info', color: '#38bdf8' },
+          { max: 14, text: 'Atlético', badge: 'badge-ok', tone: 'ok', color: '#22c55e' },
+          { max: 18, text: 'Fitness', badge: 'badge-ok', tone: 'ok', color: '#16a34a' },
+          { max: 25, text: 'Média', badge: 'badge-warn', tone: 'warn', color: '#f59e0b' },
+          { max: Infinity, text: 'Elevada', badge: 'badge-danger', tone: 'danger', color: '#ef4444' }
+        ],
+        levelsF: [
+          { max: 14, text: 'Essencial', badge: 'badge-info', tone: 'info', color: '#38bdf8' },
+          { max: 21, text: 'Atlético', badge: 'badge-ok', tone: 'ok', color: '#22c55e' },
+          { max: 25, text: 'Fitness', badge: 'badge-ok', tone: 'ok', color: '#16a34a' },
+          { max: 32, text: 'Média', badge: 'badge-warn', tone: 'warn', color: '#f59e0b' },
+          { max: Infinity, text: 'Elevada', badge: 'badge-danger', tone: 'danger', color: '#ef4444' }
+        ]
+      },
+      ffmi: {
+        name: 'FFMI',
+        unit: 'kg/m²',
+        ref: 'Kouri et al., Clin J Sport Med 1995',
+        levelsM: [
+          { max: 18, text: 'Baixo', badge: 'badge-warn', tone: 'warn', color: '#f59e0b' },
+          { max: 20, text: 'Média', badge: 'badge-info', tone: 'info', color: '#38bdf8' },
+          { max: 22, text: 'Bom', badge: 'badge-ok', tone: 'ok', color: '#22c55e' },
+          { max: 23, text: 'Excelente', badge: 'badge-ok', tone: 'ok', color: '#16a34a' },
+          { max: Infinity, text: 'Atlético / elevado', badge: 'badge-elite', tone: 'elite', color: '#a78bfa' }
+        ],
+        levelsF: [
+          { max: 15, text: 'Baixo', badge: 'badge-warn', tone: 'warn', color: '#f59e0b' },
+          { max: 17, text: 'Média', badge: 'badge-info', tone: 'info', color: '#38bdf8' },
+          { max: 19, text: 'Bom', badge: 'badge-ok', tone: 'ok', color: '#22c55e' },
+          { max: 21, text: 'Excelente', badge: 'badge-ok', tone: 'ok', color: '#16a34a' },
+          { max: Infinity, text: 'Atlético / elevado', badge: 'badge-elite', tone: 'elite', color: '#a78bfa' }
+        ]
+      },
+      fmi: {
+        name: 'FMI',
+        unit: 'kg/m²',
+        ref: 'Schutz et al. / Kyle et al. (ESPEN)',
+        levelsM: [
+          { max: 3, text: 'Baixo', badge: 'badge-info', tone: 'info', color: '#38bdf8' },
+          { max: 6, text: 'Normal', badge: 'badge-ok', tone: 'ok', color: '#22c55e' },
+          { max: 9, text: 'Elevado', badge: 'badge-warn', tone: 'warn', color: '#f59e0b' },
+          { max: Infinity, text: 'Muito elevado', badge: 'badge-danger', tone: 'danger', color: '#ef4444' }
+        ],
+        levelsF: [
+          { max: 5, text: 'Baixo', badge: 'badge-info', tone: 'info', color: '#38bdf8' },
+          { max: 9, text: 'Normal', badge: 'badge-ok', tone: 'ok', color: '#22c55e' },
+          { max: 13, text: 'Elevado', badge: 'badge-warn', tone: 'warn', color: '#f59e0b' },
+          { max: Infinity, text: 'Muito elevado', badge: 'badge-danger', tone: 'danger', color: '#ef4444' }
+        ]
+      },
+      visceral: {
+        name: 'Gordura visceral',
+        unit: 'nível',
+        ref: 'Escalas BIA (Tanita / InBody) + literatura clínica',
+        levels: [
+          { max: 10, text: 'Saudável', badge: 'badge-ok', tone: 'ok', color: '#22c55e' },
+          { max: 15, text: 'Elevado', badge: 'badge-warn', tone: 'warn', color: '#f59e0b' },
+          { max: Infinity, text: 'Muito elevado', badge: 'badge-danger', tone: 'danger', color: '#ef4444' }
+        ]
+      },
+      water: {
+        name: '% Água corporal',
+        unit: '%',
+        ref: 'Faixas típicas de água corporal total (TBW)',
+        levels: [
+          { max: 45, text: 'Baixa', badge: 'badge-danger', tone: 'danger', color: '#ef4444' },
+          { max: 50, text: 'Limite baixo', badge: 'badge-warn', tone: 'warn', color: '#f59e0b' },
+          { max: 65, text: 'Normal', badge: 'badge-ok', tone: 'ok', color: '#22c55e' },
+          { max: Infinity, text: 'Elevada', badge: 'badge-info', tone: 'info', color: '#38bdf8' }
+        ]
+      }
+    };
+
+    function classifyMetric(key, value, sex) {
+      if (value == null || isNaN(value)) return null;
+      const scale = METRIC_SCALES[key];
+      if (!scale) return null;
+      let levels = scale.levels;
+      if (!levels) levels = sex === 'F' ? scale.levelsF : scale.levelsM;
+      if (!levels) return null;
+      let idx = 0;
+      for (let i = 0; i < levels.length; i++) {
+        if (value < levels[i].max) { idx = i; break; }
+        idx = i;
+      }
+      const lvl = levels[idx];
+      return {
+        text: lvl.text,
+        badge: lvl.badge,
+        tone: lvl.tone,
+        color: lvl.color,
+        idx,
+        levels,
+        ref: scale.ref,
+        name: scale.name
+      };
+    }
+
+    function scaleBarHtml(classification) {
+      if (!classification?.levels) return '';
+      return `<div class="scale-bar" title="${classification.ref || ''}">${
+        classification.levels.map((l, i) =>
+          `<span class="${i === classification.idx ? 'active' : ''}" style="background:${l.color}"></span>`
+        ).join('')
+      }</div>`;
+    }
+
+    function renderScaleLegend(sex) {
+      const el = document.getElementById('scaleLegend');
+      if (!el) return;
+      const keys = ['bmi', 'fat', 'ffmi', 'fmi', 'visceral', 'water'];
+      el.innerHTML = keys.map(key => {
+        const s = METRIC_SCALES[key];
+        const levels = s.levels || (sex === 'F' ? s.levelsF : s.levelsM);
+        if (!levels) return '';
+        const rows = levels.map(l => {
+          const range = l.max === Infinity ? '≥ anterior' : `< ${l.max}${s.unit === '%' ? '%' : ''}`;
+          return `<div class="legend-row"><span class="legend-swatch" style="background:${l.color}"></span><span><strong style="color:${l.color}">${l.text}</strong> · ${range}</span></div>`;
+        }).join('');
+        return `<div class="legend-card"><div style="font-weight:650;margin-bottom:8px;font-size:0.88rem;">${s.name} <span style="font-weight:400;color:var(--text-dim);font-size:0.75rem;">(${s.unit})</span></div>${rows}<div class="legend-ref">Ref.: ${s.ref}</div></div>`;
+      }).join('');
+    }
+
+    function buildPdfReportHtml() {
+      const p = state.profile;
+      const w = state.weighings;
+      if (!p || !w.length) return null;
+      const last = w[w.length - 1];
+      const bmi = calcBMI(last.weight, p.height);
+      const ffmi = calcFFMI(last.weight, p.height, last.fat);
+      const fmi = fatMassIndex(last.weight, p.height, last.fat);
+      const bmr = calcBMR(last.weight, p.height, p.age || 30, p.sex);
+      const tdee = calcTDEE(bmr, p.activity);
+      const metrics = [
+        { key: 'bmi', val: bmi, fmt: v => v.toFixed(1) },
+        { key: 'ffmi', val: ffmi, fmt: v => v != null ? v.toFixed(1) : '—' },
+        { key: 'fmi', val: fmi, fmt: v => v != null ? v.toFixed(1) : '—' },
+        { key: 'fat', val: last.fat, fmt: v => v != null ? v + '%' : '—' },
+        { key: 'visceral', val: last.visceral, fmt: v => v != null ? v : '—' },
+        { key: 'water', val: last.water, fmt: v => v != null ? v + '%' : '—' }
+      ];
+      const rows = metrics.map(m => {
+        const c = classifyMetric(m.key, m.val, p.sex);
+        const bar = c ? c.levels.map((l, i) =>
+          `<span style="display:inline-block;width:18px;height:8px;background:${l.color};opacity:${i === c.idx ? 1 : 0.3};margin-right:1px;border-radius:2px;"></span>`
+        ).join('') : '';
+        return `<tr>
+          <td style="padding:8px;border-bottom:1px solid #ddd;">${METRIC_SCALES[m.key]?.name || m.key}</td>
+          <td style="padding:8px;border-bottom:1px solid #ddd;font-weight:700;color:${c?.color || '#111'}">${m.fmt(m.val)}</td>
+          <td style="padding:8px;border-bottom:1px solid #ddd;">${c ? `<span style="background:${c.color}22;color:${c.color};padding:2px 8px;border-radius:6px;font-size:12px;">${c.text}</span>` : '—'}</td>
+          <td style="padding:8px;border-bottom:1px solid #ddd;">${bar}</td>
+          <td style="padding:8px;border-bottom:1px solid #ddd;font-size:11px;color:#666;">${c?.ref || ''}</td>
+        </tr>`;
+      }).join('');
+
+      const legendBlocks = ['bmi', 'fat', 'ffmi', 'fmi', 'visceral', 'water'].map(key => {
+        const s = METRIC_SCALES[key];
+        const levels = s.levels || (p.sex === 'F' ? s.levelsF : s.levelsM);
+        const items = levels.map(l =>
+          `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:11px;">
+            <span style="width:10px;height:10px;background:${l.color};border-radius:2px;display:inline-block;"></span>${l.text}</span>`
+        ).join('');
+        return `<div style="margin-bottom:8px;"><strong>${s.name}</strong> <span style="font-size:10px;color:#888;">(${s.ref})</span><br>${items}</div>`;
+      }).join('');
+
+      return `
+        <div style="font-family:system-ui,sans-serif;max-width:800px;margin:0 auto;padding:24px;color:#111;">
+          <h1 style="margin:0 0 4px;font-size:22px;">BodyMetrics — Relatório</h1>
+          <p style="margin:0 0 16px;color:#555;font-size:13px;">${p.name || 'Utilizador'} · ${p.sex === 'M' ? 'Masculino' : 'Feminino'} · ${p.height} cm · ${p.age || '—'} anos · ${new Date(last.date).toLocaleDateString('pt-PT')}</p>
+          <p style="font-size:14px;margin-bottom:12px;"><strong>Peso:</strong> ${last.weight.toFixed(1)} kg &nbsp;|&nbsp; <strong>BMR:</strong> ${Math.round(bmr)} kcal &nbsp;|&nbsp; <strong>TDEE:</strong> ${Math.round(tdee)} kcal</p>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px;">
+            <thead><tr style="background:#f1f5f9;text-align:left;">
+              <th style="padding:8px;">Métrica</th><th style="padding:8px;">Valor</th><th style="padding:8px;">Categoria</th><th style="padding:8px;">Escala</th><th style="padding:8px;">Referência</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <h2 style="font-size:16px;margin:0 0 10px;">Legenda das escalas de cores</h2>
+          ${legendBlocks}
+          <p style="margin-top:20px;font-size:10px;color:#888;line-height:1.4;">
+            IMC: OMS (WHO). % Gordura: ACE (American Council on Exercise). FFMI: Kouri et al., Clin J Sport Med 1995.
+            FMI: Schutz / Kyle (ESPEN). Gordura visceral: escalas BIA clínicas. Água: faixas típicas de TBW.
+            A bioimpedância é sensível à hidratação; não substitui avaliação médica.
+          </p>
+        </div>`;
+    }
+
+    function exportPdf() {
+      const html = buildPdfReportHtml();
+      if (!html) {
+        showToast('Registe perfil e pelo menos uma pesagem');
+        return;
+      }
+      const win = window.open('', '_blank');
+      if (!win) {
+        showToast('Permita pop-ups para exportar PDF');
+        return;
+      }
+      win.document.write(`<!DOCTYPE html><html><head><title>BodyMetrics Relatório</title>
+        <style>@media print{body{margin:0}} body{margin:0;background:#fff}</style></head>
+        <body>${html}<script>window.onload=function(){setTimeout(function(){window.print()},200)}<\/script></body></html>`);
+      win.document.close();
+    }
+
+    function bmiCategory(bmi) {
+      const c = classifyMetric('bmi', bmi);
+      return c || { text: '—', badge: 'badge-info', color: 'var(--info)' };
+    }
+    function fatCategory(fat, sex) {
+      return classifyMetric('fat', fat, sex);
+    }
+    function hydrationStatus(water) {
+      return classifyMetric('water', water);
+    }
+    function ffmiCategory(ffmi, sex) {
+      return classifyMetric('ffmi', ffmi, sex);
+    }
+    function fmiCategory(fmi, sex) {
+      return classifyMetric('fmi', fmi, sex);
+    }
+    function visceralCategory(v) {
+      return classifyMetric('visceral', v);
+    }
+
+    // ========== CSV / GPX Import (body + activity / Amazfit-Zepp) ==========
+    const COL_MAP = {
+      date: ['date', 'data', 'datetime', 'time', 'timestamp', 'dia', 'fecha', 'day', 'start time', 'starttime'],
+      weight: ['weight', 'peso', 'weight (kg)', 'peso (kg)', 'body weight', 'weightkg'],
+      fat: ['fat', 'body fat', 'bodyfat', '% fat', 'fat%', 'gordura', '% gordura', 'body fat %', 'bf%', 'fat percent'],
+      muscle: ['muscle', 'muscle mass', 'massa muscular', 'muscle (kg)', 'skeletal muscle', 'muscle mass (kg)'],
+      water: ['water', 'body water', '% water', 'água', '% água', 'hydration', 'water%', 'body water %'],
+      bone: ['bone', 'bone mass', 'massa óssea', 'bone (kg)', 'bone mass (kg)'],
+      visceral: ['visceral', 'visceral fat', 'gordura visceral', 'visceral fat level'],
+      steps: ['steps', 'passos', 'step', 'total steps', 'step count'],
+      calories: ['calories', 'calorie', 'kcal', 'cal', 'calories burned', 'active calories', 'calorias'],
+      distance: ['distance', 'distância', 'distance (km)', 'distance(m)', 'distance km', 'dist'],
+      duration: ['duration', 'duração', 'time cost', 'cost time', 'exercise time', 'sport time', 'min', 'minutes'],
+      type: ['type', 'sport type', 'sport', 'activity type', 'workout type', 'tipo', 'mode'],
+      avghr: ['avg hr', 'average hr', 'avg heart rate', 'average heart rate', 'hr', 'heart rate', 'avghr', 'avg_hr']
+    };
+
+    function normalizeHeader(h) {
+      return (h || '').toString().toLowerCase().trim().replace(/[_\-]/g, ' ');
+    }
+
+    function detectColumns(headers) {
+      const map = {};
+      const norm = headers.map(normalizeHeader);
+      for (const [key, aliases] of Object.entries(COL_MAP)) {
+        for (let i = 0; i < norm.length; i++) {
+          if (aliases.some(a => norm[i] === a || norm[i].includes(a))) {
+            map[key] = i;
+            break;
+          }
+        }
+      }
+      return map;
+    }
+
+    function parseDate(val) {
+      if (!val) return null;
+      val = val.toString().trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(val)) return val.slice(0, 10);
+      const m1 = val.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
+      if (m1) {
+        const d = m1[1].padStart(2,'0'), mo = m1[2].padStart(2,'0'), y = m1[3];
+        return `${y}-${mo}-${d}`;
+      }
+      const m2 = val.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (m2) {
+        let d = parseInt(m2[1]), mo = parseInt(m2[2]);
+        if (d > 12) return `${m2[3]}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        return `${m2[3]}-${String(d).padStart(2,'0')}-${String(mo).padStart(2,'0')}`;
+      }
+      // Unix timestamp (seconds or ms)
+      if (/^\d{10,13}$/.test(val)) {
+        const n = parseInt(val);
+        const ms = n > 1e12 ? n : n * 1000;
+        return new Date(ms).toISOString().slice(0, 10);
+      }
+      const d = new Date(val);
+      if (!isNaN(d)) return d.toISOString().slice(0, 10);
+      return null;
+    }
+
+    function parseNumber(val) {
+      if (val == null || val === '') return null;
+      const n = parseFloat(String(val).replace(',', '.').replace(/[^\d.\-]/g, ''));
+      return isNaN(n) ? null : n;
+    }
+
+    function parseCSVText(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) throw new Error('Ficheiro vazio ou sem dados');
+      const first = lines[0];
+      const delim = (first.split(';').length > first.split(',').length) ? ';' : ',';
+      const headers = first.split(delim).map(h => h.replace(/^["']|["']$/g, '').trim());
+      const colMap = detectColumns(headers);
+      return { lines, delim, headers, colMap };
+    }
+
+    function parseBodyCSV(text) {
+      const { lines, delim, colMap } = parseCSVText(text);
+      if (colMap.weight == null) return [];
+      const entries = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(delim).map(c => c.replace(/^["']|["']$/g, '').trim());
+        const weight = parseNumber(cols[colMap.weight]);
+        if (weight == null || weight < 20 || weight > 400) continue;
+        const date = colMap.date != null ? parseDate(cols[colMap.date]) : null;
+        if (!date) continue;
+        entries.push({
+          date, weight,
+          fat: colMap.fat != null ? parseNumber(cols[colMap.fat]) : null,
+          muscle: colMap.muscle != null ? parseNumber(cols[colMap.muscle]) : null,
+          water: colMap.water != null ? parseNumber(cols[colMap.water]) : null,
+          bone: colMap.bone != null ? parseNumber(cols[colMap.bone]) : null,
+          visceral: colMap.visceral != null ? parseNumber(cols[colMap.visceral]) : null
+        });
+      }
+      return entries;
+    }
+
+    function parseActivityCSV(text) {
+      const { lines, delim, colMap } = parseCSVText(text);
+      const daily = [];
+      const workouts = [];
+      const hasSteps = colMap.steps != null;
+      const hasSport = colMap.type != null || colMap.duration != null || colMap.distance != null;
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(delim).map(c => c.replace(/^["']|["']$/g, '').trim());
+        const date = colMap.date != null ? parseDate(cols[colMap.date]) : null;
+        if (!date) continue;
+
+        if (hasSteps && !hasSport) {
+          const steps = parseNumber(cols[colMap.steps]);
+          if (steps == null) continue;
+          daily.push({
+            date,
+            steps,
+            calories: colMap.calories != null ? parseNumber(cols[colMap.calories]) : null,
+            distance: colMap.distance != null ? parseNumber(cols[colMap.distance]) : null,
+            activeMinutes: colMap.duration != null ? parseNumber(cols[colMap.duration]) : null,
+            source: 'csv'
+          });
+        } else if (hasSport || colMap.duration != null) {
+          let dist = colMap.distance != null ? parseNumber(cols[colMap.distance]) : null;
+          if (dist != null && dist > 100) dist = dist / 1000; // metres → km
+          let dur = colMap.duration != null ? parseNumber(cols[colMap.duration]) : null;
+          if (dur != null && dur > 500) dur = Math.round(dur / 60); // seconds → min
+          workouts.push({
+            date,
+            type: colMap.type != null ? (cols[colMap.type] || 'Treino') : 'Treino',
+            durationMin: dur,
+            distanceKm: dist,
+            calories: colMap.calories != null ? parseNumber(cols[colMap.calories]) : null,
+            avgHr: colMap.avghr != null ? parseNumber(cols[colMap.avghr]) : null,
+            source: 'csv-zepp'
+          });
+        }
+      }
+      return { daily, workouts };
+    }
+
+    function parseGPX(text) {
+      const workouts = [];
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'application/xml');
+        const trkpts = doc.querySelectorAll('trkpt');
+        if (!trkpts.length) return workouts;
+
+        let minTime = null, maxTime = null, dist = 0;
+        let prevLat = null, prevLon = null;
+        let hrSum = 0, hrCount = 0;
+
+        const toRad = x => x * Math.PI / 180;
+        const haversine = (lat1, lon1, lat2, lon2) => {
+          const R = 6371;
+          const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+          const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        };
+
+        trkpts.forEach(pt => {
+          const lat = parseFloat(pt.getAttribute('lat'));
+          const lon = parseFloat(pt.getAttribute('lon'));
+          const tEl = pt.querySelector('time');
+          if (tEl) {
+            const t = new Date(tEl.textContent);
+            if (!minTime || t < minTime) minTime = t;
+            if (!maxTime || t > maxTime) maxTime = t;
+          }
+          const hrEl = pt.querySelector('hr, heartrate') || pt.getElementsByTagNameNS('*', 'hr')[0];
+          if (hrEl) {
+            const hr = parseFloat(hrEl.textContent);
+            if (!isNaN(hr)) { hrSum += hr; hrCount++; }
+          }
+          if (prevLat != null) dist += haversine(prevLat, prevLon, lat, lon);
+          prevLat = lat; prevLon = lon;
+        });
+
+        if (!minTime) return workouts;
+        const durationMin = maxTime ? Math.round((maxTime - minTime) / 60000) : null;
+        workouts.push({
+          date: minTime.toISOString().slice(0, 10),
+          type: 'Outdoor (GPX)',
+          durationMin,
+          distanceKm: Math.round(dist * 100) / 100,
+          calories: null,
+          avgHr: hrCount ? Math.round(hrSum / hrCount) : null,
+          source: 'gpx'
+        });
+      } catch (e) { console.error(e); }
+      return workouts;
+    }
+
+    function mergeActivities(daily) {
+      const map = {};
+      state.activities.forEach(a => { map[a.date] = { ...a }; });
+      let added = 0;
+      daily.forEach(a => {
+        if (!map[a.date]) { map[a.date] = a; added++; }
+        else {
+          const e = map[a.date];
+          if (a.steps != null) e.steps = a.steps;
+          if (a.calories != null) e.calories = a.calories;
+          if (a.distance != null) e.distance = a.distance;
+          if (a.activeMinutes != null) e.activeMinutes = a.activeMinutes;
+        }
+      });
+      state.activities = Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+      return added;
+    }
+
+    function mergeWorkouts(list) {
+      const existing = new Set(state.workouts.map(w => `${w.date}_${w.type}_${w.durationMin}_${w.distanceKm}`));
+      let added = 0;
+      list.forEach(w => {
+        const key = `${w.date}_${w.type}_${w.durationMin}_${w.distanceKm}`;
+        if (!existing.has(key)) {
+          state.workouts.push(w);
+          existing.add(key);
+          added++;
+        }
+      });
+      state.workouts.sort((a, b) => a.date.localeCompare(b.date));
+      return added;
+    }
+
+    /** Análise antes/depois: correlação treino ↔ composição corporal + água */
+    function analyzeWorkout(wo) {
+      const parts = [];
+      const before = wo.before || {};
+      const after = wo.after || {};
+
+      const dWeight = (before.weight != null && after.weight != null) ? after.weight - before.weight : null;
+      const dFat = (before.fat != null && after.fat != null) ? after.fat - before.fat : null;
+      const dMuscle = (before.muscle != null && after.muscle != null) ? after.muscle - before.muscle : null;
+      const dBodyWater = (before.bodyWater != null && after.bodyWater != null) ? after.bodyWater - before.bodyWater : null;
+
+      if (dWeight != null) {
+        const abs = Math.abs(dWeight);
+        if (abs < 0.15) parts.push(`Peso estável (${dWeight >= 0 ? '+' : ''}${dWeight.toFixed(2)} kg) — normal a curto prazo.`);
+        else if (dWeight < 0) {
+          parts.push(`Perda de ${abs.toFixed(2)} kg após o treino.`);
+          if (wo.waterMl != null && wo.waterMl < 300 && abs > 0.4)
+            parts.push(`Ingestão de água baixa (${wo.waterMl} ml) — parte da perda pode ser desidratação.`);
+          else if (wo.waterMl != null && wo.waterMl >= 400)
+            parts.push(`Com ${wo.waterMl} ml de água, a perda sugere sobretudo gasto energético / glicogénio + suor.`);
+        } else {
+          parts.push(`Ganho de +${dWeight.toFixed(2)} kg após o treino (possível retenção de água ou refeição).`);
+        }
+      }
+
+      if (dFat != null) {
+        if (Math.abs(dFat) < 0.3) parts.push(`% gordura praticamente inalterada (${dFat >= 0 ? '+' : ''}${dFat.toFixed(1)} pp).`);
+        else parts.push(`Variação de gordura: ${dFat >= 0 ? '+' : ''}${dFat.toFixed(1)} pp (bioimpedância sensível a hidratação — interprete com cautela no mesmo dia).`);
+      }
+
+      if (dMuscle != null) {
+        if (dMuscle > 0.2) parts.push(`Músculo +${dMuscle.toFixed(1)} kg (pode refletir hiperemia / glicogénio pós-treino de força).`);
+        else if (dMuscle < -0.2) parts.push(`Músculo ${dMuscle.toFixed(1)} kg — frequentemente artefacto de hidratação, não perda real.`);
+      }
+
+      if (dBodyWater != null) {
+        if (dBodyWater < -0.5) parts.push(`Água corporal ${dBodyWater.toFixed(1)} pp — sinal de desidratação relativa.`);
+        else if (dBodyWater > 0.5) parts.push(`Água corporal +${dBodyWater.toFixed(1)} pp — boa reidratação ou retenção.`);
+      }
+
+      if (wo.waterMl != null) {
+        const mlPerMin = wo.durationMin ? Math.round(wo.waterMl / wo.durationMin) : null;
+        parts.push(`Água no treino: <strong>${wo.waterMl} ml</strong>${mlPerMin != null ? ` (~${mlPerMin} ml/min)` : ''}.`);
+        if (wo.durationMin && wo.durationMin >= 45 && wo.waterMl < 250)
+          parts.push(`Recomendação: em sessões ≥45 min, 400–800 ml costumam ajudar desempenho e recuperação.`);
+      }
+
+      if (wo.durationMin && wo.calories) {
+        const kcalPerMin = (wo.calories / wo.durationMin).toFixed(1);
+        parts.push(`Intensidade aproximada: ${kcalPerMin} kcal/min.`);
+      }
+
+      // Correlação com pesagens próximas no histórico (se não houver before/after manuais)
+      if (dWeight == null && state.weighings.length) {
+        const nearby = state.weighings.filter(w => {
+          const diff = Math.abs(new Date(w.date) - new Date(wo.date)) / 86400000;
+          return diff <= 2;
+        });
+        if (nearby.length >= 2) {
+          const sorted = nearby.sort((a, b) => a.date.localeCompare(b.date));
+          const first = sorted[0], last = sorted[sorted.length - 1];
+          const dw = last.weight - first.weight;
+          parts.push(`Pesagens próximas (±2 dias): variação de peso ${dw >= 0 ? '+' : ''}${dw.toFixed(2)} kg entre ${first.date} e ${last.date}.`);
+        } else if (nearby.length === 1) {
+          parts.push(`Pesagem próxima: ${nearby[0].weight.toFixed(1)} kg em ${nearby[0].date}.`);
+        }
+      }
+
+      if (!parts.length) return 'Registe peso/gordura antes e depois (ou importe pesagens próximas) e a água ingerida para ver a correlação.';
+      return parts.join(' ');
+    }
+
+    function importFile(file) {
+      const name = (file.name || '').toLowerCase();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target.result;
+          let msg = [];
+
+          if (name.endsWith('.gpx') || text.trim().startsWith('<?xml') || text.includes('<gpx')) {
+            const w = parseGPX(text);
+            const n = mergeWorkouts(w);
+            msg.push(`${n} treino(s) GPX`);
+          } else {
+            // Try body first
+            const body = parseBodyCSV(text);
+            if (body.length) {
+              const existing = new Set(state.weighings.map(w => `${w.date}_${w.weight}`));
+              let added = 0;
+              body.forEach(entry => {
+                const key = `${entry.date}_${entry.weight}`;
+                if (!existing.has(key)) {
+                  state.weighings.push(entry);
+                  existing.add(key);
+                  added++;
+                }
+              });
+              state.weighings.sort((a, b) => a.date.localeCompare(b.date));
+              msg.push(`${added} pesagem(ns)`);
+            }
+            // Activity / Zepp SPORT style
+            const act = parseActivityCSV(text);
+            if (act.daily.length) msg.push(`${mergeActivities(act.daily)} dia(s) de atividade`);
+            if (act.workouts.length) msg.push(`${mergeWorkouts(act.workouts)} treino(s)`);
+          }
+
+          if (!msg.length) {
+            showToast('Nenhum dado reconhecido neste ficheiro');
+            return;
+          }
+          save(state);
+          const resultEl = document.getElementById('importResult');
+          resultEl.style.display = 'block';
+          resultEl.innerHTML = `
+            <div class="card" style="border-color: var(--accent); background: var(--accent-glow);">
+              <strong style="color: var(--accent);">✓ Importação concluída</strong>
+              <p style="font-size:0.88rem; color: var(--text-muted); margin-top:6px;">${msg.join(' · ')}</p>
+            </div>`;
+          showToast(msg.join(' · '));
+          refreshAll();
+        } catch (err) {
+          showToast(err.message || 'Erro ao importar');
+          console.error(err);
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    // ========== AI Insights ==========
+    function generateInsights() {
+      const p = state.profile;
+      const w = state.weighings;
+      const insights = [];
+
+      if (p && w.length) {
+        const last = w[w.length - 1];
+        const bmi = calcBMI(last.weight, p.height);
+        const ffmi = calcFFMI(last.weight, p.height, last.fat);
+        const bmr = calcBMR(last.weight, p.height, p.age || 30, p.sex);
+        const tdee = calcTDEE(bmr, p.activity);
+        const fmi = fatMassIndex(last.weight, p.height, last.fat);
+
+        // Metabolism
+        let metabText = `O seu metabolismo basal estimado é de aproximadamente <strong>${Math.round(bmr)} kcal/dia</strong>. Com o seu nível de atividade, o gasto total diário (TDEE) situa-se perto de <strong>${Math.round(tdee)} kcal</strong>. `;
+        if (w.length >= 3) {
+          const recent = w.slice(-5);
+          const weights = recent.map(x => x.weight);
+          const trend = weights[weights.length - 1] - weights[0];
+          const weeks = Math.max(1, (new Date(recent[recent.length-1].date) - new Date(recent[0].date)) / (7*86400000));
+          const rate = Math.abs(trend) / weeks;
+          if (Math.abs(trend) < 0.4) {
+            metabText += 'O peso tem-se mantido estável — sinal de equilíbrio energético.';
+          } else if (trend > 0) {
+            metabText += `Tendência de ganho de ~${trend.toFixed(1)} kg. Se o objetivo for perda de gordura, considere um défice moderado de 300–500 kcal.`;
+          } else {
+            metabText += `Tendência de perda de ~${Math.abs(trend).toFixed(1)} kg (~${rate.toFixed(2)} kg/semana). `;
+            if (rate > 1) metabText += 'A taxa está elevada — certifique-se de que não perde massa magra em excesso.';
+            else metabText += 'Ritmo saudável de perda.';
+          }
+        } else {
+          metabText += 'Continue a registar pesagens para detetar tendências com maior precisão.';
+        }
+        insights.push({ title: 'Metabolismo', icon: '🔥', color: '#f97316', body: metabText });
+
+        // Body composition
+        let compText = `IMC atual: <strong>${bmi.toFixed(1)}</strong> (${bmiCategory(bmi).text}). `;
+        if (ffmi != null) {
+          const ffmiGood = p.sex === 'M' ? 20 : 17;
+          compText += `FFMI: <strong>${ffmi.toFixed(1)}</strong>. `;
+          if (ffmi >= ffmiGood) compText += 'Boa densidade muscular para a sua altura. ';
+          else compText += 'Há margem para aumentar massa magra com treino de força. ';
+        }
+        if (fmi != null) {
+          compText += `Índice de massa gorda (FMI): <strong>${fmi.toFixed(1)}</strong>. `;
+        }
+        if (last.fat != null) {
+          const cat = fatCategory(last.fat, p.sex);
+          compText += `% de gordura (${last.fat}%) — categoria <strong>${cat.text}</strong>. `;
+        }
+        if (last.water != null) {
+          const hyd = hydrationStatus(last.water);
+          compText += `Hidratação corporal: ${last.water}% (${hyd.text}).`;
+        }
+        insights.push({ title: 'Composição corporal', icon: '🧬', color: '#22c55e', body: compText });
+
+        // Training / Nutrition
+        let trainText = '';
+        if (last.muscle != null && w.length >= 2) {
+          const prev = [...w].reverse().find(x => x.muscle != null && x.date !== last.date);
+          if (prev) {
+            const dMuscle = last.muscle - prev.muscle;
+            if (dMuscle > 0.3) trainText += `Ganho de massa muscular de +${dMuscle.toFixed(1)} kg — excelente progresso. `;
+            else if (dMuscle < -0.3) trainText += `Perda de massa muscular de ${dMuscle.toFixed(1)} kg. Avalie défice calórico e volume de treino. `;
+          }
+        }
+        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+        const weekW = state.workouts.filter(x => x.date >= weekAgo);
+        if (weekW.length) {
+          const dist = weekW.reduce((s, x) => s + (x.distanceKm || 0), 0);
+          trainText += `Últimos 7 dias: <strong>${weekW.length} treino(s)</strong>${dist ? `, ${dist.toFixed(1)} km` : ''}. `;
+        } else if (state.activities.length) {
+          const recentSteps = state.activities.slice(-7);
+          const avgSteps = recentSteps.reduce((s, a) => s + (a.steps || 0), 0) / Math.max(1, recentSteps.length);
+          trainText += `Média de passos (últimos dias): ~${Math.round(avgSteps).toLocaleString('pt-PT')}. `;
+        }
+        const protein = Math.round(last.weight * 1.8);
+        trainText += `Proteína ~1.6–2.2 g/kg (${protein} g/dia), treino de força 3–5×/semana e 7–9 h de sono. `;
+        if (last.visceral != null) {
+          if (last.visceral >= 12) trainText += `Gordura visceral elevada (${last.visceral}). Priorize NEAT (passos) e sono.`;
+          else if (last.visceral >= 9) trainText += `Gordura visceral moderada (${last.visceral}).`;
+          else trainText += `Gordura visceral controlada (${last.visceral}).`;
+        }
+        insights.push({ title: 'Treino & Nutrição', icon: '💪', color: '#38bdf8', body: trainText });
+      }
+
+      // 4º relatório: Antes & Depois do treino (correlação treino ↔ corpo + água)
+      const analyzed = [...state.workouts]
+        .filter(wo => wo.before?.weight != null || wo.after?.weight != null || wo.waterMl != null || state.weighings.some(x => Math.abs(new Date(x.date) - new Date(wo.date)) / 86400000 <= 2))
+        .slice(-5)
+        .reverse();
+
+      if (analyzed.length) {
+        let baText = `Análise dos <strong>${analyzed.length}</strong> treino(s) mais recentes com dados de composição e/ou hidratação:<br><br>`;
+        analyzed.forEach((wo, i) => {
+          const label = `${wo.type} · ${new Date(wo.date).toLocaleDateString('pt-PT')}`;
+          const detail = analyzeWorkout(wo);
+          baText += `<strong>${i + 1}. ${label}</strong>`;
+          if (wo.before?.weight != null || wo.after?.weight != null) {
+            baText += ` — peso ${wo.before?.weight != null ? wo.before.weight.toFixed(1) : '—'} → ${wo.after?.weight != null ? wo.after.weight.toFixed(1) : '—'} kg`;
+          }
+          if (wo.waterMl != null) baText += ` · água ${wo.waterMl} ml`;
+          baText += `<br><span style="color:var(--text-muted)">${detail}</span><br><br>`;
+        });
+
+        // Síntese agregada
+        const withDelta = analyzed.filter(wo => wo.before?.weight != null && wo.after?.weight != null);
+        if (withDelta.length >= 2) {
+          const avgDw = withDelta.reduce((s, wo) => s + (wo.after.weight - wo.before.weight), 0) / withDelta.length;
+          const avgWater = analyzed.filter(wo => wo.waterMl != null);
+          baText += `<strong>Síntese:</strong> variação média de peso pós-treino ${avgDw >= 0 ? '+' : ''}${avgDw.toFixed(2)} kg`;
+          if (avgWater.length) {
+            const mw = avgWater.reduce((s, wo) => s + wo.waterMl, 0) / avgWater.length;
+            baText += `; água média por sessão ~${Math.round(mw)} ml`;
+          }
+          baText += '. Use estes padrões para ajustar hidratação e timing das pesagens.';
+        } else {
+          baText += 'Continue a registar peso antes/depois e água no treino para obter uma síntese estatística.';
+        }
+
+        insights.push({ title: 'Antes & Depois do treino', icon: '⏱️', color: '#a78bfa', body: baText });
+      } else if (state.workouts.length) {
+        insights.push({
+          title: 'Antes & Depois do treino',
+          icon: '⏱️',
+          color: '#a78bfa',
+          body: `Tem <strong>${state.workouts.length}</strong> treino(s) registado(s), mas ainda sem dados de composição antes/depois nem água. Em <em>Adicionar → Registar treino</em>, preencha peso/% gordura antes e depois e a água ingerida (ml) para gerar a correlação automática.`
+        });
+      }
+
+      return insights;
+    }
+
+    // ========== Chart ==========
+    let weightChart = null;
+    function renderChart() {
+      const ctx = document.getElementById('weightChart');
+      if (!ctx) return;
+      const data = state.weighings.slice(-45);
+      if (weightChart) weightChart.destroy();
+
+      const labels = data.map(d => {
+        const dt = new Date(d.date);
+        return dt.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+      });
+
+      let values, label, color;
+      if (chartMetric === 'fat') {
+        values = data.map(d => d.fat);
+        label = '% Gordura';
+        color = '#f59e0b';
+      } else if (chartMetric === 'muscle') {
+        values = data.map(d => d.muscle);
+        label = 'Músculo (kg)';
+        color = '#38bdf8';
+      } else {
+        values = data.map(d => d.weight);
+        label = 'Peso (kg)';
+        color = '#22c55e';
+      }
+
+      weightChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data: values,
+            borderColor: color,
+            backgroundColor: color + '22',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 3,
+            pointBackgroundColor: color,
+            spanGaps: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', maxTicksLimit: 7, font: { size: 11 } } },
+            y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    // ========== UI ==========
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function renderDashboard() {
+      const p = state.profile;
+      const w = state.weighings;
+      document.getElementById('dashName').textContent = p?.name ? `Olá, ${p.name}!` : 'Olá!';
+      if (p) {
+        document.getElementById('dashMeta').textContent = `${p.age || '—'} anos · ${p.height} cm · ${p.sex === 'M' ? 'Masculino' : 'Feminino'}`;
+      }
+
+      const lastEl = document.getElementById('lastWeighing');
+      if (!w.length) {
+        lastEl.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M5 10l7-7 7 7"/></svg><p>Ainda não tem pesagens.<br>Toque em + para registar ou importe um CSV.</p></div>`;
+      } else {
+        const last = w[w.length - 1];
+        const prev = w.length > 1 ? w[w.length - 2] : null;
+        let deltaHtml = '';
+        if (prev) {
+          const d = last.weight - prev.weight;
+          const cls = d > 0 ? 'delta-up' : 'delta-down';
+          deltaHtml = `<span class="history-delta ${cls}">${d > 0 ? '+' : ''}${d.toFixed(1)} kg</span>`;
+        }
+        const fatCat = fatCategory(last.fat, p?.sex || 'M');
+        lastEl.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div class="last-weight-value">${last.weight.toFixed(1)} <span class="last-weight-unit">kg</span></div>
+              <div class="history-date" style="margin-top:4px;">${new Date(last.date).toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+            </div>
+            <div style="text-align:right;">${deltaHtml}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;font-size:0.82rem;">
+            ${last.fat != null ? `<div><div style="color:var(--text-dim);font-size:0.72rem;">Gordura</div><strong>${last.fat}%</strong>${fatCat ? ` <span class="badge ${fatCat.badge}">${fatCat.text}</span>` : ''}</div>` : ''}
+            ${last.muscle != null ? `<div><div style="color:var(--text-dim);font-size:0.72rem;">Músculo</div><strong>${last.muscle} kg</strong></div>` : ''}
+            ${last.water != null ? `<div><div style="color:var(--text-dim);font-size:0.72rem;">Água</div><strong>${last.water}%</strong></div>` : ''}
+          </div>
+        `;
+      }
+
+      // Main metrics with color scales
+      const grid = document.getElementById('metricsGrid');
+      if (p && w.length) {
+        const last = w[w.length - 1];
+        const bmi = calcBMI(last.weight, p.height);
+        const ffmi = calcFFMI(last.weight, p.height, last.fat);
+        const bmr = calcBMR(last.weight, p.height, p.age || 30, p.sex);
+        const tdee = calcTDEE(bmr, p.activity);
+        const cat = classifyMetric('bmi', bmi);
+        const ffmiCat = classifyMetric('ffmi', ffmi, p.sex);
+        grid.innerHTML = `
+          <div class="metric-card">
+            <div class="metric-value scale-${cat.tone}">${bmi.toFixed(1)}</div>
+            <div class="metric-label">IMC</div>
+            <div class="metric-sub"><span class="badge ${cat.badge}">${cat.text}</span></div>
+            ${scaleBarHtml(cat)}
+          </div>
+          <div class="metric-card">
+            <div class="metric-value ${ffmiCat ? 'scale-' + ffmiCat.tone : ''}">${ffmi != null ? ffmi.toFixed(1) : '—'}</div>
+            <div class="metric-label">FFMI</div>
+            <div class="metric-sub">${ffmiCat ? `<span class="badge ${ffmiCat.badge}">${ffmiCat.text}</span>` : 'massa magra'}</div>
+            ${scaleBarHtml(ffmiCat)}
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${Math.round(bmr)}</div>
+            <div class="metric-label">BMR</div>
+            <div class="metric-sub">kcal/dia</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${Math.round(tdee)}</div>
+            <div class="metric-label">TDEE</div>
+            <div class="metric-sub">kcal/dia</div>
+          </div>
+        `;
+      }
+
+      // Composition metrics with color scales
+      const compGrid = document.getElementById('compGrid');
+      if (p && w.length) {
+        const last = w[w.length - 1];
+        const fmi = fatMassIndex(last.weight, p.height, last.fat);
+        const lean = leanMass(last.weight, last.fat);
+        const mPct = musclePct(last.weight, last.muscle);
+        const fmiCat = classifyMetric('fmi', fmi, p.sex);
+        const fatCat = classifyMetric('fat', last.fat, p.sex);
+        const visCat = classifyMetric('visceral', last.visceral);
+        const hydCat = classifyMetric('water', last.water);
+        compGrid.innerHTML = `
+          <div class="metric-card">
+            <div class="metric-value ${fmiCat ? 'scale-' + fmiCat.tone : ''}">${fmi != null ? fmi.toFixed(1) : '—'}</div>
+            <div class="metric-label">FMI</div>
+            <div class="metric-sub">${fmiCat ? `<span class="badge ${fmiCat.badge}">${fmiCat.text}</span>` : 'massa gorda'}</div>
+            ${scaleBarHtml(fmiCat)}
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${lean != null ? lean.toFixed(1) : '—'}</div>
+            <div class="metric-label">Massa magra</div>
+            <div class="metric-sub">kg</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value ${fatCat ? 'scale-' + fatCat.tone : ''}">${last.fat != null ? last.fat + '%' : (mPct != null ? mPct.toFixed(1) + '%' : '—')}</div>
+            <div class="metric-label">${last.fat != null ? '% Gordura' : '% Músculo'}</div>
+            <div class="metric-sub">${fatCat ? `<span class="badge ${fatCat.badge}">${fatCat.text}</span>` : (mPct != null ? 'do peso' : '')}</div>
+            ${scaleBarHtml(fatCat)}
+          </div>
+          ${last.visceral != null ? `
+          <div class="metric-card">
+            <div class="metric-value ${visCat ? 'scale-' + visCat.tone : ''}">${last.visceral}</div>
+            <div class="metric-label">Visceral</div>
+            <div class="metric-sub">${visCat ? `<span class="badge ${visCat.badge}">${visCat.text}</span>` : 'nível'}</div>
+            ${scaleBarHtml(visCat)}
+          </div>` : ''}
+          ${last.water != null ? `
+          <div class="metric-card">
+            <div class="metric-value ${hydCat ? 'scale-' + hydCat.tone : ''}">${last.water}%</div>
+            <div class="metric-label">Água</div>
+            <div class="metric-sub">${hydCat ? `<span class="badge ${hydCat.badge}">${hydCat.text}</span>` : ''}</div>
+            ${scaleBarHtml(hydCat)}
+          </div>` : ''}
+        `;
+      }
+
+      renderScaleLegend(p?.sex || 'M');
+
+      // Activity metrics
+      const actGrid = document.getElementById('activityGrid');
+      const today = new Date().toISOString().slice(0, 10);
+      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+      const todayAct = state.activities.find(a => a.date === today);
+      const weekWorkouts = state.workouts.filter(w => w.date >= weekAgo);
+      const weekCals = weekWorkouts.reduce((s, w) => s + (w.calories || 0), 0);
+      const weekDist = weekWorkouts.reduce((s, w) => s + (w.distanceKm || 0), 0);
+      if (actGrid) {
+        actGrid.innerHTML = `
+          <div class="metric-card">
+            <div class="metric-value">${todayAct?.steps != null ? todayAct.steps.toLocaleString('pt-PT') : '—'}</div>
+            <div class="metric-label">Passos (hoje)</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${weekWorkouts.length || '—'}</div>
+            <div class="metric-label">Treinos (7d)</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${weekCals ? Math.round(weekCals) : (todayAct?.calories != null ? Math.round(todayAct.calories) : '—')}</div>
+            <div class="metric-label">kcal ativas</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${weekDist ? weekDist.toFixed(1) + ' km' : (todayAct?.distance != null ? todayAct.distance.toFixed(1) + ' km' : '—')}</div>
+            <div class="metric-label">Distância (7d)</div>
+          </div>
+        `;
+      }
+      const rw = document.getElementById('recentWorkouts');
+      if (rw) {
+        const recent = [...state.workouts].reverse().slice(0, 8);
+        if (!recent.length) {
+          rw.innerHTML = `<div class="empty" style="padding:20px;"><p style="font-size:0.85rem;">Importe CSV/GPX da Zepp ou registe um treino com análise antes/depois.</p></div>`;
+        } else {
+          rw.innerHTML = recent.map((w, idx) => {
+            const analysis = analyzeWorkout(w);
+            const hasBA = w.before?.weight != null || w.after?.weight != null || w.waterMl != null;
+            return `
+            <div style="padding:12px 0; border-bottom:1px solid var(--border);">
+              <div class="history-item" style="border:none;padding:0;">
+                <div>
+                  <div class="history-weight" style="font-size:0.95rem;">${w.type}</div>
+                  <div class="history-date">${new Date(w.date).toLocaleDateString('pt-PT')}${w.durationMin ? ' · ' + w.durationMin + ' min' : ''}${w.distanceKm ? ' · ' + w.distanceKm + ' km' : ''}${w.waterMl != null ? ' · 💧 ' + w.waterMl + ' ml' : ''}</div>
+                </div>
+                <div style="text-align:right;font-size:0.85rem;color:var(--text-muted);">
+                  ${w.calories ? w.calories + ' kcal' : ''}${w.avgHr ? '<br>FC ' + w.avgHr : ''}
+                </div>
+              </div>
+              ${hasBA ? `
+              <div style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);line-height:1.5;background:#0d1829;border-radius:10px;padding:10px 12px;">
+                <strong style="color:var(--info);">Análise antes → depois</strong><br>
+                ${w.before?.weight != null || w.after?.weight != null ? `Peso: ${w.before?.weight != null ? w.before.weight.toFixed(1) : '—'} → ${w.after?.weight != null ? w.after.weight.toFixed(1) : '—'} kg<br>` : ''}
+                ${w.before?.fat != null || w.after?.fat != null ? `Gordura: ${w.before?.fat != null ? w.before.fat + '%' : '—'} → ${w.after?.fat != null ? w.after.fat + '%' : '—'}<br>` : ''}
+                ${w.before?.muscle != null || w.after?.muscle != null ? `Músculo: ${w.before?.muscle != null ? w.before.muscle + ' kg' : '—'} → ${w.after?.muscle != null ? w.after.muscle + ' kg' : '—'}<br>` : ''}
+                <span style="color:var(--text);">${analysis}</span>
+              </div>` : `<div style="margin-top:6px;font-size:0.78rem;color:var(--text-dim);">${analysis}</div>`}
+            </div>`;
+          }).join('');
+        }
+      }
+
+      renderChart();
+
+      const insights = generateInsights();
+      const aiEl = document.getElementById('aiInsights');
+      if (!insights.length) {
+        aiEl.innerHTML = `<div class="empty"><p>Registe pesagens e/ou treinos com análise antes/depois para receber insights.</p></div>`;
+      } else {
+        aiEl.innerHTML = insights.map(i => `
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-icon" style="background:${i.color}22;color:${i.color}">${i.icon}</div>
+              <div class="insight-title">${i.title}</div>
+            </div>
+            <div class="insight-body">${i.body}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      const w = [...state.weighings].reverse();
+      if (!w.length) {
+        list.innerHTML = `<div class="empty"><p>Sem registos ainda.</p></div>`;
+        return;
+      }
+      list.innerHTML = w.map((item, idx) => {
+        const realIdx = state.weighings.length - 1 - idx;
+        const prev = realIdx > 0 ? state.weighings[realIdx - 1] : null;
+        let delta = '';
+        if (prev) {
+          const d = item.weight - prev.weight;
+          const cls = d > 0 ? 'delta-up' : 'delta-down';
+          delta = `<span class="history-delta ${cls}">${d > 0 ? '+' : ''}${d.toFixed(1)} kg</span>`;
+        }
+        return `
+          <div class="history-item">
+            <div>
+              <div class="history-weight">${item.weight.toFixed(1)} kg</div>
+              <div class="history-date">${new Date(item.date).toLocaleDateString('pt-PT')}</div>
+            </div>
+            <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+              ${delta}
+              <button class="btn btn-ghost btn-sm" style="padding:4px 10px; font-size:0.75rem;" onclick="deleteWeighing(${realIdx})">Apagar</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderFullInsights() {
+      const insights = generateInsights();
+      const el = document.getElementById('fullInsights');
+      if (!insights.length) {
+        el.innerHTML = `<div class="empty"><p>Registe pesagens e/ou treinos com análise antes/depois para gerar os relatórios de IA.</p></div>`;
+        return;
+      }
+      el.innerHTML = insights.map(i => `
+        <div class="insight-card">
+          <div class="insight-header">
+            <div class="insight-icon" style="background:${i.color}22;color:${i.color}">${i.icon}</div>
+            <div class="insight-title">${i.title}</div>
+          </div>
+          <div class="insight-body">${i.body}</div>
+        </div>
+      `).join('') + `
+        <div class="card" style="margin-top:16px;font-size:0.8rem;color:var(--text-muted);">
+          <strong>Nota:</strong> As análises de metabolismo e composição usam fórmulas validadas (Mifflin-St Jeor, FFMI, FMI). O relatório <em>Antes &amp; Depois do treino</em> correlaciona métricas de sessão (duração, kcal, água) com peso/% gordura/% água antes e depois — a bioimpedância no mesmo dia é sensível à hidratação. Não substituem aconselhamento médico ou nutricional profissional.
+        </div>
+      `;
+    }
+
+    function refreshAll() {
+      renderDashboard();
+      renderHistory();
+      renderFullInsights();
+    }
+
+    // ========== Events ==========
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('page-' + btn.dataset.page).classList.add('active');
+        if (btn.dataset.page === 'insights') renderFullInsights();
+        if (btn.dataset.page === 'connections') updateFitbitUI();
+      });
+    });
+
+    document.getElementById('chartTabs')?.addEventListener('click', e => {
+      const tab = e.target.closest('.mini-tab');
+      if (!tab) return;
+      document.querySelectorAll('.mini-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      chartMetric = tab.dataset.metric;
+      renderChart();
+    });
+
+    document.getElementById('btnProfile').addEventListener('click', () => {
+      const p = state.profile || {};
+      document.getElementById('pName').value = p.name || '';
+      document.getElementById('pAge').value = p.age || '';
+      document.getElementById('pSex').value = p.sex || 'M';
+      document.getElementById('pHeight').value = p.height || '';
+      document.getElementById('pActivity').value = p.activity || '1.55';
+      document.getElementById('profileModal').classList.add('open');
+    });
+    document.getElementById('closeProfile').addEventListener('click', () => {
+      document.getElementById('profileModal').classList.remove('open');
+    });
+    document.getElementById('profileModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('profileModal')) {
+        document.getElementById('profileModal').classList.remove('open');
+      }
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', e => {
+      e.preventDefault();
+      state.profile = {
+        name: document.getElementById('pName').value.trim() || null,
+        age: parseInt(document.getElementById('pAge').value) || 30,
+        sex: document.getElementById('pSex').value,
+        height: parseFloat(document.getElementById('pHeight').value),
+        activity: document.getElementById('pActivity').value
+      };
+      save(state);
+      document.getElementById('profileModal').classList.remove('open');
+      showToast('Perfil guardado');
+      refreshAll();
+    });
+
+    document.getElementById('weighForm').addEventListener('submit', e => {
+      e.preventDefault();
+      if (!state.profile || !state.profile.height) {
+        showToast('Configure primeiro o perfil (altura)');
+        document.getElementById('btnProfile').click();
+        return;
+      }
+      const entry = {
+        date: document.getElementById('wDate').value,
+        weight: parseFloat(document.getElementById('wWeight').value),
+        fat: document.getElementById('wFat').value ? parseFloat(document.getElementById('wFat').value) : null,
+        muscle: document.getElementById('wMuscle').value ? parseFloat(document.getElementById('wMuscle').value) : null,
+        water: document.getElementById('wWater').value ? parseFloat(document.getElementById('wWater').value) : null,
+        bone: document.getElementById('wBone').value ? parseFloat(document.getElementById('wBone').value) : null,
+        visceral: document.getElementById('wVisceral').value ? parseInt(document.getElementById('wVisceral').value) : null
+      };
+      state.weighings.push(entry);
+      state.weighings.sort((a, b) => a.date.localeCompare(b.date));
+      save(state);
+      document.getElementById('weighForm').reset();
+      document.getElementById('wDate').value = new Date().toISOString().slice(0, 10);
+      showToast('Pesagem guardada');
+      document.querySelector('[data-page="dashboard"]').click();
+      refreshAll();
+    });
+
+    document.getElementById('workoutForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const num = id => {
+        const v = document.getElementById(id).value;
+        return v !== '' ? parseFloat(v) : null;
+      };
+      const wo = {
+        date: document.getElementById('woDate').value,
+        type: document.getElementById('woType').value,
+        durationMin: num('woDuration'),
+        distanceKm: num('woDistance'),
+        calories: num('woCalories'),
+        avgHr: num('woAvgHr'),
+        waterMl: num('woWaterMl'),
+        notes: document.getElementById('woNotes').value.trim() || null,
+        before: {
+          weight: num('woWeightBefore'),
+          fat: num('woFatBefore'),
+          muscle: num('woMuscleBefore'),
+          bodyWater: num('woBodyWaterBefore')
+        },
+        after: {
+          weight: num('woWeightAfter'),
+          fat: num('woFatAfter'),
+          muscle: num('woMuscleAfter'),
+          bodyWater: num('woBodyWaterAfter')
+        },
+        source: 'manual'
+      };
+      state.workouts.push(wo);
+      state.workouts.sort((a, b) => a.date.localeCompare(b.date));
+
+      // Opcional: também registar pesagens before/after no histórico de corpo
+      if (wo.before.weight != null) {
+        state.weighings.push({
+          date: wo.date,
+          weight: wo.before.weight,
+          fat: wo.before.fat,
+          muscle: wo.before.muscle,
+          water: wo.before.bodyWater,
+          bone: null,
+          visceral: null,
+          note: 'Antes do treino'
+        });
+      }
+      if (wo.after.weight != null) {
+        state.weighings.push({
+          date: wo.date,
+          weight: wo.after.weight,
+          fat: wo.after.fat,
+          muscle: wo.after.muscle,
+          water: wo.after.bodyWater,
+          bone: null,
+          visceral: null,
+          note: 'Depois do treino'
+        });
+      }
+      state.weighings.sort((a, b) => a.date.localeCompare(b.date));
+      save(state);
+
+      document.getElementById('workoutForm').reset();
+      document.getElementById('woDate').value = new Date().toISOString().slice(0, 10);
+      showToast('Treino e análise guardados');
+      document.querySelector('[data-page="dashboard"]').click();
+      refreshAll();
+    });
+
+    // CSV Import UI
+    const importZone = document.getElementById('importZone');
+    const csvFile = document.getElementById('csvFile');
+    importZone.addEventListener('click', () => csvFile.click());
+    importZone.addEventListener('dragover', e => { e.preventDefault(); importZone.classList.add('dragover'); });
+    importZone.addEventListener('dragleave', () => importZone.classList.remove('dragover'));
+    importZone.addEventListener('drop', e => {
+      e.preventDefault();
+      importZone.classList.remove('dragover');
+      [...e.dataTransfer.files].forEach(f => importFile(f));
+    });
+    csvFile.addEventListener('change', () => {
+      [...csvFile.files].forEach(f => importFile(f));
+      csvFile.value = '';
+    });
+
+    window.deleteWeighing = function(idx) {
+      if (!confirm('Apagar esta pesagem?')) return;
+      state.weighings.splice(idx, 1);
+      save(state);
+      showToast('Pesagem apagada');
+      refreshAll();
+    };
+
+    document.getElementById('wDate').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('woDate').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('btnExportPdf')?.addEventListener('click', exportPdf);
+
+    // Fitbit UI events
+    document.getElementById('btnFitbitConnect').addEventListener('click', () => {
+      if (state.connections.fitbit?.clientId) {
+        startFitbitAuth();
+      } else {
+        document.getElementById('fitbitConfigSection').style.display = 'block';
+        document.getElementById('fitbitRedirect').value = getRedirectUri();
+      }
+    });
+    document.getElementById('btnFitbitSync').addEventListener('click', syncFitbit);
+    document.getElementById('btnFitbitDisconnect').addEventListener('click', disconnectFitbit);
+    document.getElementById('btnSaveFitbitConfig').addEventListener('click', () => {
+      const clientId = document.getElementById('fitbitClientId').value.trim();
+      if (!clientId) {
+        showToast('Introduza o Client ID');
+        return;
+      }
+      if (!state.connections.fitbit) state.connections.fitbit = {};
+      state.connections.fitbit.clientId = clientId;
+      save(state);
+      startFitbitAuth();
+    });
+
+    // Handle OAuth callback on load
+    handleFitbitCallback().then(handled => {
+      if (handled) {
+        document.querySelector('[data-page="connections"]')?.click();
+      }
+      updateFitbitUI();
+    });
+
+    // PWA Install
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBanner').style.display = 'block';
+    });
+    document.getElementById('installBtn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') document.getElementById('installBanner').style.display = 'none';
+      deferredPrompt = null;
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    refreshAll();
+  </script>
+</body>
+</html>
