@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="App2Fit">
+  <defs>
+    <linearGradient id="a2f" x1="12%" y1="88%" x2="88%" y2="12%">
+      <stop offset="0%" stop-color="#00e8a0"/>
+      <stop offset="55%" stop-color="#00d4c0"/>
+      <stop offset="100%" stop-color="#2ee6ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#000"/>
+  <!-- speed lines -->
+  <g fill="none" stroke="url(#a2f)" stroke-linecap="round">
+    <path stroke-width="28" d="M48 175 H195"/>
+    <path stroke-width="28" d="M48 228 H175"/>
+    <path stroke-width="26" d="M58 280 H160"/>
+    <path stroke-width="22" d="M88 330 H145"/>
+  </g>
+  <!-- profile 2 + face -->
+  <path fill="none" stroke="url(#a2f)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"
+        d="M155 370
+           C155 300 160 240 205 185
+           C255 120 340 95 395 130
+           C445 160 465 220 435 270
+           C415 305 365 320 325 300
+           C295 285 285 250 305 220
+           C320 198 355 195 385 215"/>
+  <path fill="none" stroke="url(#a2f)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"
+        d="M175 355 C215 415 285 450 355 435 C390 428 415 410 430 385"/>
+  <!-- arrow up -->
+  <path fill="url(#a2f)" d="M300 470 L365 375 L430 470 L395 470 L395 505 L335 505 L335 470 Z"/>
+</svg>
