@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#0a1628" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="BodyMetrics – Transforme as suas pesagens em ciência do corpo. Métricas avançadas e análise por IA." />
-  <title>BodyMetrics · Painel da balança</title>
+  <meta name="description" content="App2fit — composição corporal, treinos e evolução. Métricas avançadas e análise por IA." />
+  <title>App2fit</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
   <link rel="apple-touch-icon" href="icon-192.png" />
@@ -405,8 +405,8 @@
 
   <header class="header">
     <div class="logo">
-      <svg viewBox="0 0 32 32" fill="none"><path d="M8 22c0-6 4-10 8-10s8 4 8 10" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="10" r="3" fill="#22c55e"/></svg>
-      BodyMetrics
+      <img src="icon.svg" alt="" width="28" height="28" style="border-radius:7px;" />
+      App2fit
     </div>
     <div class="header-actions">
       <button class="btn btn-ghost btn-sm" id="btnProfile" title="Perfil">Perfil</button>
@@ -499,7 +499,10 @@
             <button type="button" class="mini-tab" data-metric="bodyScore">Pontuação corporal</button>
           </div>
           <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
-          <p id="chartEmptyHint" style="display:none;font-size:0.78rem;color:var(--text-dim);margin-top:8px;text-align:center;"></p>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px;flex-wrap:wrap;">
+            <p id="chartEmptyHint" style="display:none;font-size:0.78rem;color:var(--text-dim);margin:0;text-align:left;flex:1;"></p>
+            <button type="button" class="btn btn-sm btn-outline-accent" id="btnShareChart" title="Partilhar gráfico atual">Partilhar gráfico</button>
+          </div>
         </div>
       </div>
 
@@ -635,48 +638,26 @@
               <label>Água ingerida durante o treino (ml)</label>
               <input type="number" id="woWaterMl" min="0" max="5000" step="50" placeholder="Ex: 500" />
             </div>
-            <div class="section-title" style="margin-top:8px; margin-bottom:10px;">Composição corporal — Antes</div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Peso antes (kg)</label>
-                <input type="number" id="woWeightBefore" step="0.1" min="30" max="300" placeholder="80.5" />
-              </div>
-              <div class="form-group">
-                <label>% Gordura antes</label>
-                <input type="number" id="woFatBefore" step="0.1" min="3" max="60" placeholder="18.0" />
-              </div>
+            <div class="section-title" style="margin-top:8px; margin-bottom:10px;">Efeito do treino nas métricas</div>
+            <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:10px;line-height:1.4;">
+              Associe pesagens do histórico para comparar antes e depois. Se existirem 2+ pesagens no mesmo dia, a app tenta ligá-las automaticamente.
+            </p>
+            <div class="form-group">
+              <label>Pesagem <strong>antes</strong> do treino</label>
+              <select id="woWeighBefore">
+                <option value="">— Selecionar ou automático —</option>
+              </select>
+              <div id="woBeforePreview" style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;"></div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Músculo antes (kg)</label>
-                <input type="number" id="woMuscleBefore" step="0.1" placeholder="36.5" />
-              </div>
-              <div class="form-group">
-                <label>% Água corporal antes</label>
-                <input type="number" id="woBodyWaterBefore" step="0.1" placeholder="55.0" />
-              </div>
+            <div class="form-group">
+              <label>Pesagem <strong>depois</strong> do treino</label>
+              <select id="woWeighAfter">
+                <option value="">— Selecionar ou automático —</option>
+              </select>
+              <div id="woAfterPreview" style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;"></div>
             </div>
-            <div class="section-title" style="margin-top:8px; margin-bottom:10px;">Composição corporal — Depois</div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Peso depois (kg)</label>
-                <input type="number" id="woWeightAfter" step="0.1" min="30" max="300" placeholder="80.2" />
-              </div>
-              <div class="form-group">
-                <label>% Gordura depois</label>
-                <input type="number" id="woFatAfter" step="0.1" min="3" max="60" placeholder="17.9" />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Músculo depois (kg)</label>
-                <input type="number" id="woMuscleAfter" step="0.1" placeholder="36.6" />
-              </div>
-              <div class="form-group">
-                <label>% Água corporal depois</label>
-                <input type="number" id="woBodyWaterAfter" step="0.1" placeholder="54.5" />
-              </div>
-            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnAutoLinkWeigh" style="margin-bottom:12px;">Associar automaticamente (mesmo dia)</button>
+            <div id="woEffectPreview" style="display:none;font-size:0.82rem;line-height:1.5;background:#0d1829;border-radius:12px;padding:12px;margin-bottom:12px;border:1px solid var(--border);"></div>
             <div class="form-group">
               <label>Notas (opcional)</label>
               <input type="text" id="woNotes" placeholder="Ex: treino de pernas, sensação boa" />
@@ -716,27 +697,16 @@
           </div>
         </div>
 
-        <!-- Google Fit -->
+        <!-- Health Connect -->
         <div class="conn-card">
-          <div class="conn-logo" style="background:#4285F4;">📊</div>
+          <div class="conn-logo" style="background:#01875f;">💚</div>
           <div class="conn-info">
-            <div class="conn-name">Google Fit</div>
-            <div class="conn-status">API em descontinuação</div>
+            <div class="conn-name">Health Connect</div>
+            <div class="conn-status" id="hcStatus">Android · via CSV / exportação</div>
           </div>
           <div class="conn-actions">
-            <button class="btn btn-sm btn-ghost" disabled title="Use CSV ou Health Connect">Indisponível</button>
-          </div>
-        </div>
-
-        <!-- Apple Health -->
-        <div class="conn-card">
-          <div class="conn-logo" style="background:#FF2D55;">❤️</div>
-          <div class="conn-info">
-            <div class="conn-name">Apple Health</div>
-            <div class="conn-status">Apenas em apps nativas iOS</div>
-          </div>
-          <div class="conn-actions">
-            <button class="btn btn-sm btn-ghost" disabled>Indisponível</button>
+            <button class="btn btn-sm btn-outline-accent" id="btnHcHelp">Como usar</button>
+            <button class="btn btn-sm btn-primary" onclick="document.querySelector('[data-page=add]').click()">Importar</button>
           </div>
         </div>
 
@@ -752,12 +722,11 @@
           </div>
         </div>
 
-        <div class="conn-note">
+        <div class="conn-note" id="hcHelpNote">
           <strong>Como funciona</strong><br>
-          • <strong>Fitbit</strong>: ligação direta via OAuth. Crie app em <em>dev.fitbit.com</em> e cole o Client ID.<br>
-          • <strong>Amazfit / Zepp</strong>: não há API pública simples para web. Na app Zepp: <em>Perfil → Definições → Direitos do utilizador → Exportar dados</em> (ZIP com CSV). Treinos individuais: exportar GPX. Depois importe na página Adicionar.<br>
-          • <strong>Google Fit</strong>: API Web em descontinuação. Use CSV ou Health Connect.<br>
-          • <strong>Apple Health</strong>: bloqueado em websites/PWAs.<br>
+          • <strong>Health Connect</strong> (Android): a API nativa não está disponível em PWAs no browser. Use apps que exportam dados do HC (ou da balança/relógio) em <strong>CSV</strong> e importe em Adicionar. Em Android 14+, Health Connect centraliza dados de Zepp, Fitbit, Google Fit legado, etc.<br>
+          • <strong>Fitbit</strong>: ligação direta via OAuth (dev.fitbit.com).<br>
+          • <strong>Amazfit / Zepp</strong>: Perfil → Definições → Exportar dados (CSV/GPX).<br>
           • <strong>Balanças</strong>: CSV (Runstar, Xiaomi, Renpho, etc.).
         </div>
       </div>
@@ -781,6 +750,24 @@
             5. Cole o Client ID e clique em Ligar
           </p>
           <button class="btn btn-primary" style="width:100%;" id="btnSaveFitbitConfig">Guardar e Ligar</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Backup e restauro</div>
+        <div class="card">
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px;line-height:1.45;">
+            Guarde um ficheiro com perfil, pesagens, treinos e atividades. Pode restaurar noutro telemóvel ou enviar para o Google Drive.
+          </p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <button type="button" class="btn btn-primary btn-sm" id="btnBackupDownload">Descarregar backup (.json)</button>
+            <button type="button" class="btn btn-outline-accent btn-sm" id="btnBackupRestore">Restaurar de ficheiro</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnBackupDrive">Google Drive</button>
+          </div>
+          <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none;" />
+          <p id="backupDriveHint" style="display:none;font-size:0.78rem;color:var(--text-dim);margin-top:12px;line-height:1.4;">
+            O ficheiro de backup foi descarregado. Abra o <a href="https://drive.google.com/drive/u/0/my-drive" target="_blank" rel="noopener" style="color:var(--accent);">Google Drive</a> e carregue o ficheiro <code>app2fit-backup-….json</code> (Novo → Carregar ficheiro).
+          </p>
         </div>
       </div>
     </div>
@@ -953,6 +940,14 @@
         <div class="form-group">
           <label>Água ingerida (ml)</label>
           <input type="number" id="ewoWaterMl" min="0" max="5000" step="50" />
+        </div>
+        <div class="form-group">
+          <label>Pesagem antes</label>
+          <select id="ewoWeighBefore"><option value="">— Nenhuma —</option></select>
+        </div>
+        <div class="form-group">
+          <label>Pesagem depois</label>
+          <select id="ewoWeighAfter"><option value="">— Nenhuma —</option></select>
         </div>
         <div class="form-group">
           <label>Notas</label>
@@ -1442,71 +1437,182 @@
       }).join('');
     }
 
-    function buildPdfReportHtml() {
+    function pdfMetricRow(label, value, note) {
+      return `<tr>
+        <td style="padding:7px 8px;border-bottom:1px solid #e2e8f0;">${label}</td>
+        <td style="padding:7px 8px;border-bottom:1px solid #e2e8f0;font-weight:700;text-align:right;">${value ?? '—'}</td>
+        <td style="padding:7px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#64748b;">${note || ''}</td>
+      </tr>`;
+    }
+
+    /** Gera imagens dos gráficos de evolução (todas as métricas CHART_METRICS) */
+    async function buildChartImages() {
+      const data = state.weighings.slice(-60);
+      if (!data.length || typeof Chart === 'undefined') return [];
+      const labels = data.map(d => {
+        const dt = new Date(d.date);
+        return dt.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+      });
+      const images = [];
+      const keys = Object.keys(CHART_METRICS);
+      for (const key of keys) {
+        const cfg = CHART_METRICS[key];
+        const values = data.map(d => cfg.get(d));
+        if (!values.some(v => v != null && !isNaN(v))) continue;
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 220;
+        // Chart.js precisa do canvas no DOM para alguns ambientes
+        canvas.style.position = 'fixed';
+        canvas.style.left = '-9999px';
+        document.body.appendChild(canvas);
+        const chart = new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: (cfg.unit ? cfg.label + ' (' + cfg.unit + ')' : cfg.label),
+              data: values,
+              borderColor: cfg.color,
+              backgroundColor: cfg.color + '33',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 2,
+              spanGaps: true
+            }]
+          },
+          options: {
+            responsive: false,
+            animation: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { maxTicksLimit: 5, font: { size: 9 }, color: '#64748b' }, grid: { color: '#f1f5f9' } },
+              y: {
+                ticks: { font: { size: 9 }, color: '#64748b' },
+                grid: { color: '#f1f5f9' },
+                title: { display: !!cfg.unit, text: cfg.unit || '', font: { size: 9 } }
+              }
+            }
+          }
+        });
+        await new Promise(r => setTimeout(r, 40));
+        images.push({ label: (cfg.unit ? cfg.label + ' (' + cfg.unit + ')' : cfg.label), url: canvas.toDataURL('image/png') });
+        chart.destroy();
+        canvas.remove();
+      }
+      return images;
+    }
+
+    async function buildPdfReportHtml() {
       const p = state.profile;
       const w = state.weighings;
       if (!p || !w.length) return null;
       const last = w[w.length - 1];
+      const sex = p.sex || 'M';
       const bmi = calcBMI(last.weight, p.height);
       const ffmi = calcFFMI(last.weight, p.height, last.fat);
+      const ffmiAdj = adjustedFFMI(ffmi, p.height);
       const fmi = fatMassIndex(last.weight, p.height, last.fat);
-      const bmr = calcBMR(last.weight, p.height, p.age || 30, p.sex);
-      const tdee = calcTDEE(bmr, p.activity);
-      const metrics = [
-        { key: 'bmi', val: bmi, fmt: v => v.toFixed(1) },
-        { key: 'ffmi', val: ffmi, fmt: v => v != null ? v.toFixed(1) : '—' },
-        { key: 'fmi', val: fmi, fmt: v => v != null ? v.toFixed(1) : '—' },
-        { key: 'fat', val: last.fat, fmt: v => v != null ? v + '%' : '—' },
-        { key: 'visceral', val: last.visceral, fmt: v => v != null ? v : '—' },
-        { key: 'water', val: last.water, fmt: v => v != null ? v + '%' : '—' }
-      ];
-      const rows = metrics.map(m => {
-        const c = classifyMetric(m.key, m.val, p.sex);
-        const bar = c ? c.levels.map((l, i) =>
-          `<span style="display:inline-block;width:18px;height:8px;background:${l.color};opacity:${i === c.idx ? 1 : 0.3};margin-right:1px;border-radius:2px;"></span>`
-        ).join('') : '';
-        return `<tr>
-          <td style="padding:8px;border-bottom:1px solid #ddd;">${METRIC_SCALES[m.key]?.name || m.key}</td>
-          <td style="padding:8px;border-bottom:1px solid #ddd;font-weight:700;color:${c?.color || '#111'}">${m.fmt(m.val)}</td>
-          <td style="padding:8px;border-bottom:1px solid #ddd;">${c ? `<span style="background:${c.color}22;color:${c.color};padding:2px 8px;border-radius:6px;font-size:12px;">${c.text}</span>` : '—'}</td>
-          <td style="padding:8px;border-bottom:1px solid #ddd;">${bar}</td>
-          <td style="padding:8px;border-bottom:1px solid #ddd;font-size:11px;color:#666;">${c?.ref || ''}</td>
-        </tr>`;
-      }).join('');
+      const lean = leanMass(last.weight, last.fat);
+      const fatMass = last.fat != null ? last.weight * last.fat / 100 : null;
+      const muscleIdx = last.muscle != null && p.height ? last.muscle / Math.pow(p.height / 100, 2) : null;
+      const muscleFatRatio = last.muscle != null && fatMass > 0 ? last.muscle / fatMass : null;
+      const bmrMifflin = calcBMR(last.weight, p.height, p.age || 30, sex);
+      const bmrKatch = calcBMRKatch(lean);
+      const tdee = calcTDEE(bmrMifflin, p.activity);
+      const deficit05 = tdee - 550;
+      const proteinRec = lean != null ? Math.round(lean * 2) : Math.round(last.weight * 1.6);
+      const metAge = metabolicAge(last.weight, p.height, p.age || 30, sex);
+      const waterKg = last.water != null ? last.weight * last.water / 100 : null;
+      const hydLean = waterKg != null && lean > 0 ? (waterKg / lean) * 100 : null;
 
-      const legendBlocks = ['bmi', 'fat', 'ffmi', 'fmi', 'visceral', 'water'].map(key => {
-        const s = METRIC_SCALES[key];
-        const levels = s.levels || (p.sex === 'F' ? s.levelsF : s.levelsM);
-        const items = levels.map(l =>
-          `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:11px;">
-            <span style="width:10px;height:10px;background:${l.color};border-radius:2px;display:inline-block;"></span>${l.text}</span>`
-        ).join('');
-        return `<div style="margin-bottom:8px;"><strong>${s.name}</strong> <span style="font-size:10px;color:#888;">(${s.ref})</span><br>${items}</div>`;
-      }).join('');
+      let pRatio = null;
+      if (w.length >= 2 && last.fat != null && w[0].fat != null) {
+        const dW = last.weight - w[0].weight;
+        const dLean = leanMass(last.weight, last.fat) - leanMass(w[0].weight, w[0].fat);
+        if (Math.abs(dW) > 0.3) pRatio = dLean / dW;
+      }
+
+      const fmt = (v, d = 1, suf = '') => v != null && !isNaN(v) ? Number(v).toFixed(d) + suf : '—';
+
+      const compositionRows = [
+        pdfMetricRow('IMC', fmt(bmi), 'OMS / WHO'),
+        pdfMetricRow('Massa gorda', fatMass != null ? fmt(fatMass) + ' kg' : '—', 'contextual'),
+        pdfMetricRow('Massa magra (FFM)', lean != null ? fmt(lean) + ' kg' : '—', ''),
+        pdfMetricRow('FFMI', fmt(ffmi), 'Kouri et al.'),
+        pdfMetricRow('FFMI ajustado', fmt(ffmiAdj), 'norm. 1,80 m'),
+        pdfMetricRow('FMI', fmt(fmi), 'Schutz / Kyle'),
+        pdfMetricRow('Índice massa muscular', muscleIdx != null ? fmt(muscleIdx) : '—', 'kg/m²'),
+        pdfMetricRow('Razão músculo/gordura', muscleFatRatio != null ? fmt(muscleFatRatio, 2) : '—', 'contextual'),
+        pdfMetricRow('% Gordura', last.fat != null ? fmt(last.fat) + ' %' : '—', 'ACE'),
+        pdfMetricRow('Massa muscular', last.muscle != null ? fmt(last.muscle) + ' kg' : '—', '')
+      ].join('');
+
+      const metaRows = [
+        pdfMetricRow('BMR Katch–McArdle', bmrKatch != null ? Math.round(bmrKatch) + ' kcal' : '—', ''),
+        pdfMetricRow('BMR Mifflin–St Jeor', Math.round(bmrMifflin) + ' kcal', ''),
+        pdfMetricRow('Gasto diário (TDEE)', Math.round(tdee) + ' kcal', 'nível de atividade'),
+        pdfMetricRow('Défice −0,5 kg/semana', Math.round(deficit05) + ' kcal', '~550 kcal'),
+        pdfMetricRow('Proteína recomendada', proteinRec + ' g/dia', '2 g/kg FFM · ISSN'),
+        pdfMetricRow('Idade metabólica', metAge != null ? metAge + ' anos' : '—', '')
+      ].join('');
+
+      const waterRows = [
+        pdfMetricRow('Água corporal', last.water != null ? fmt(last.water) + ' %' : '—', 'TBW'),
+        pdfMetricRow('Água total', waterKg != null ? fmt(waterKg) + ' kg' : '—', ''),
+        pdfMetricRow('Hidratação massa magra', hydLean != null ? fmt(hydLean) + ' %' : '—', 'Wang et al. 70–76 %'),
+        pdfMetricRow('Gordura visceral', last.visceral != null ? String(last.visceral) : '—', 'BIA'),
+        pdfMetricRow('Proteína (BIA)', last.protein != null ? String(last.protein) : '—', ''),
+        pdfMetricRow('Massa óssea', last.bone != null ? fmt(last.bone, 2) + ' kg' : '—', 'BIA'),
+        pdfMetricRow('P-ratio do período', pRatio != null ? fmt(pRatio, 2) : '—', 'Forbes')
+      ].join('');
+
+      const chartImages = await buildChartImages();
+      const chartBlocks = chartImages.map(c => `
+        <div class="chart-cell">
+          <div class="chart-title">${c.label}</div>
+          <img src="${c.url}" alt="${c.label}" />
+        </div>`).join('');
 
       return `
-        <div style="font-family:system-ui,sans-serif;max-width:800px;margin:0 auto;padding:24px;color:#111;">
-          <h1 style="margin:0 0 4px;font-size:22px;">BodyMetrics — Relatório</h1>
-          <p style="margin:0 0 16px;color:#555;font-size:13px;">${p.name || 'Utilizador'} · ${p.sex === 'M' ? 'Masculino' : 'Feminino'} · ${p.height} cm · ${p.age || '—'} anos · ${new Date(last.date).toLocaleDateString('pt-PT')}</p>
-          <p style="font-size:14px;margin-bottom:12px;"><strong>Peso:</strong> ${last.weight.toFixed(1)} kg &nbsp;|&nbsp; <strong>BMR:</strong> ${Math.round(bmr)} kcal &nbsp;|&nbsp; <strong>TDEE:</strong> ${Math.round(tdee)} kcal</p>
-          <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px;">
-            <thead><tr style="background:#f1f5f9;text-align:left;">
-              <th style="padding:8px;">Métrica</th><th style="padding:8px;">Valor</th><th style="padding:8px;">Categoria</th><th style="padding:8px;">Escala</th><th style="padding:8px;">Referência</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-          <h2 style="font-size:16px;margin:0 0 10px;">Legenda das escalas de cores</h2>
-          ${legendBlocks}
-          <p style="margin-top:20px;font-size:10px;color:#888;line-height:1.4;">
-            IMC: OMS (WHO). % Gordura: ACE (American Council on Exercise). FFMI: Kouri et al., Clin J Sport Med 1995.
-            FMI: Schutz / Kyle (ESPEN). Gordura visceral: escalas BIA clínicas. Água: faixas típicas de TBW.
-            A bioimpedância é sensível à hidratação; não substitui avaliação médica.
+        <div class="report">
+          <h1>App2fit — Relatório completo</h1>
+          <p class="sub">${p.name || 'Utilizador'} · ${sex === 'M' ? 'Masculino' : 'Feminino'} · ${p.height} cm · ${p.age || '—'} anos · pesagem ${new Date(last.date).toLocaleDateString('pt-PT')} · gerado ${new Date().toLocaleString('pt-PT')}</p>
+          <p class="lead"><strong>Peso:</strong> ${last.weight.toFixed(1)} kg</p>
+
+          <h2>Composição corporal</h2>
+          <table>${compositionRows}</table>
+
+          <h2>Metabolismo</h2>
+          <table>${metaRows}</table>
+
+          <h2>Água, risco e qualidade da mudança</h2>
+          <table>${waterRows}</table>
+
+          <h2 class="page-break">Evolução das métricas</h2>
+          <div class="charts-grid">${chartBlocks || '<p>Sem dados suficientes para gráficos.</p>'}</div>
+
+          <p class="footer">
+            IMC: OMS. % Gordura: ACE. FFMI: Kouri et al. FMI: Schutz/Kyle. Hidratação FFM: Wang et al.
+            P-ratio: Forbes. Bioimpedância sensível à hidratação — não substitui avaliação médica.
           </p>
         </div>`;
     }
 
-    function exportPdf() {
-      const html = buildPdfReportHtml();
+    async function exportPdf() {
+      if (!state.profile || !state.weighings.length) {
+        showToast('Registe perfil e pelo menos uma pesagem');
+        return;
+      }
+      showToast('A gerar relatório PDF…');
+      let html;
+      try {
+        html = await buildPdfReportHtml();
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao gerar gráficos do PDF');
+        return;
+      }
       if (!html) {
         showToast('Registe perfil e pelo menos uma pesagem');
         return;
@@ -1516,9 +1622,38 @@
         showToast('Permita pop-ups para exportar PDF');
         return;
       }
-      win.document.write(`<!DOCTYPE html><html><head><title>BodyMetrics Relatório</title>
-        <style>@media print{body{margin:0}} body{margin:0;background:#fff}</style></head>
-        <body>${html}<script>window.onload=function(){setTimeout(function(){window.print()},200)}<\/script></body></html>`);
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>App2fit Relatório</title>
+        <style>
+          * { box-sizing: border-box; }
+          body { margin: 0; background: #fff; color: #0f172a; font-family: system-ui, -apple-system, sans-serif; }
+          .report { max-width: 1100px; margin: 0 auto; padding: 20px 24px 40px; }
+          h1 { font-size: 22px; margin: 0 0 4px; }
+          h2 { font-size: 15px; margin: 22px 0 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+          .sub { margin: 0 0 10px; color: #64748b; font-size: 12px; }
+          .lead { font-size: 14px; margin: 0 0 8px; }
+          table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+          .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px 14px;
+          }
+          .chart-cell { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; break-inside: avoid; }
+          .chart-title { font-size: 11px; font-weight: 600; margin-bottom: 4px; color: #334155; }
+          .chart-cell img { width: 100%; height: auto; display: block; }
+          .footer { margin-top: 24px; font-size: 10px; color: #94a3b8; line-height: 1.4; }
+          @media print {
+            body { margin: 0; }
+            .page-break { break-before: page; }
+            .charts-grid { grid-template-columns: repeat(3, 1fr); }
+            .chart-cell { break-inside: avoid; }
+          }
+          @media screen and (max-width: 800px) {
+            .charts-grid { grid-template-columns: 1fr; }
+          }
+        </style>
+        </head><body>${html}
+        <script>window.onload=function(){setTimeout(function(){window.print()},400)}<\/script>
+        </body></html>`);
       win.document.close();
     }
 
@@ -1776,6 +1911,131 @@
     }
 
     /** Análise antes/depois: correlação treino ↔ composição corporal + água */
+    function weighingLabel(w, idx) {
+      if (!w) return '';
+      const parts = [`#${idx + 1} · ${w.date} · ${w.weight.toFixed(1)} kg`];
+      if (w.fat != null) parts.push(`gord. ${w.fat}%`);
+      if (w.muscle != null) parts.push(`músc. ${w.muscle} kg`);
+      if (w.water != null) parts.push(`água ${w.water}%`);
+      if (w.note) parts.push(w.note);
+      return parts.join(' · ');
+    }
+
+    function weighingToBody(w) {
+      if (!w) return { weight: null, fat: null, muscle: null, bodyWater: null, bone: null, visceral: null };
+      return {
+        weight: w.weight ?? null,
+        fat: w.fat ?? null,
+        muscle: w.muscle ?? null,
+        bodyWater: w.water ?? null,
+        bone: w.bone ?? null,
+        visceral: w.visceral ?? null
+      };
+    }
+
+    /** Preenche selects de pesagens; opcionalmente pré-seleciona índices */
+    function fillWeighingSelects(selBeforeId, selAfterId, selectedBefore, selectedAfter) {
+      const sb = document.getElementById(selBeforeId);
+      const sa = document.getElementById(selAfterId);
+      if (!sb || !sa) return;
+      const opts = state.weighings.map((w, i) =>
+        `<option value="${i}">${weighingLabel(w, i)}</option>`
+      ).join('');
+      sb.innerHTML = `<option value="">— Selecionar —</option>` + opts;
+      sa.innerHTML = `<option value="">— Selecionar —</option>` + opts;
+      if (selectedBefore != null && selectedBefore !== '') sb.value = String(selectedBefore);
+      if (selectedAfter != null && selectedAfter !== '') sa.value = String(selectedAfter);
+    }
+
+    /**
+     * Associação automática: no mesmo dia do treino, 2+ pesagens →
+     * a de menor peso ou a primeira como "antes" e a outra como "depois"
+     * (ou a mais cedo / mais tarde se houver ordem por nota).
+     * Se só houver 1 no dia, usa a do dia anterior como antes e a do dia como depois (ou vice-versa).
+     */
+    function autoLinkWeighings(workoutDate) {
+      if (!workoutDate || !state.weighings.length) return { beforeIdx: null, afterIdx: null };
+      const sameDay = [];
+      state.weighings.forEach((w, i) => {
+        if (w.date === workoutDate) sameDay.push(i);
+      });
+
+      if (sameDay.length >= 2) {
+        // Ordenar: "Antes do treino" first, then by weight descending (pré-treino costuma ser mais alto por comida/água), then index
+        const sorted = [...sameDay].sort((ia, ib) => {
+          const a = state.weighings[ia], b = state.weighings[ib];
+          const na = (a.note || '').toLowerCase(), nb = (b.note || '').toLowerCase();
+          if (na.includes('antes') && !nb.includes('antes')) return -1;
+          if (nb.includes('antes') && !na.includes('antes')) return 1;
+          if (na.includes('depois') && !nb.includes('depois')) return 1;
+          if (nb.includes('depois') && !na.includes('depois')) return -1;
+          // Se ambas sem nota, primeira no array = mais antiga se mantivermos ordem de inserção; usar índice
+          return ia - ib;
+        });
+        return { beforeIdx: sorted[0], afterIdx: sorted[sorted.length - 1] };
+      }
+
+      if (sameDay.length === 1) {
+        const dayIdx = sameDay[0];
+        // Procurar pesagem no dia anterior
+        const prev = [];
+        state.weighings.forEach((w, i) => {
+          if (w.date < workoutDate) prev.push(i);
+        });
+        if (prev.length) {
+          return { beforeIdx: prev[prev.length - 1], afterIdx: dayIdx };
+        }
+        // Ou no dia seguinte
+        const next = [];
+        state.weighings.forEach((w, i) => {
+          if (w.date > workoutDate) next.push(i);
+        });
+        if (next.length) {
+          return { beforeIdx: dayIdx, afterIdx: next[0] };
+        }
+        return { beforeIdx: null, afterIdx: dayIdx };
+      }
+
+      // Sem pesagens no dia: usar a mais próxima antes e a mais próxima depois
+      let beforeIdx = null, afterIdx = null;
+      state.weighings.forEach((w, i) => {
+        if (w.date <= workoutDate) beforeIdx = i;
+      });
+      for (let i = 0; i < state.weighings.length; i++) {
+        if (state.weighings[i].date >= workoutDate) { afterIdx = i; break; }
+      }
+      if (beforeIdx === afterIdx) afterIdx = null;
+      return { beforeIdx, afterIdx };
+    }
+
+    function updateWeighPreviews() {
+      const bi = document.getElementById('woWeighBefore')?.value;
+      const ai = document.getElementById('woWeighAfter')?.value;
+      const pb = document.getElementById('woBeforePreview');
+      const pa = document.getElementById('woAfterPreview');
+      const effect = document.getElementById('woEffectPreview');
+      if (pb) {
+        pb.textContent = bi !== '' && state.weighings[bi]
+          ? weighingLabel(state.weighings[bi], +bi) : '';
+      }
+      if (pa) {
+        pa.textContent = ai !== '' && state.weighings[ai]
+          ? weighingLabel(state.weighings[ai], +ai) : '';
+      }
+      if (effect) {
+        if (bi !== '' && ai !== '' && state.weighings[bi] && state.weighings[ai]) {
+          const before = weighingToBody(state.weighings[bi]);
+          const after = weighingToBody(state.weighings[ai]);
+          const fake = { before, after, waterMl: parseFloat(document.getElementById('woWaterMl')?.value) || null, durationMin: parseFloat(document.getElementById('woDuration')?.value) || null, calories: parseFloat(document.getElementById('woCalories')?.value) || null, date: document.getElementById('woDate')?.value };
+          effect.style.display = 'block';
+          effect.innerHTML = `<strong style="color:var(--info);">Pré-visualização do efeito</strong><br>${analyzeWorkout(fake)}`;
+        } else {
+          effect.style.display = 'none';
+          effect.innerHTML = '';
+        }
+      }
+    }
+
     function analyzeWorkout(wo) {
       const parts = [];
       const before = wo.before || {};
@@ -2093,27 +2353,28 @@
     }
 
     const CHART_METRICS = {
-      weight:   { label: 'Peso (kg)', color: '#22c55e', get: d => d.weight },
-      fat:      { label: 'Gordura corporal (%)', color: '#f59e0b', get: d => d.fat },
-      fatMass:  { label: 'Massa gorda (kg)', color: '#f97316', get: d => d.fat != null ? +(d.weight * d.fat / 100).toFixed(2) : null },
-      lean:     { label: 'Massa magra (kg)', color: '#34d399', get: d => d.fat != null ? +(d.weight * (1 - d.fat / 100)).toFixed(2) : null },
-      muscle:   { label: 'Massa muscular (kg)', color: '#38bdf8', get: d => d.muscle },
-      water:    { label: 'Água corporal (%)', color: '#0ea5e9', get: d => d.water },
-      protein:  { label: 'Proteína', color: '#a78bfa', get: d => d.protein },
-      bone:     { label: 'Massa óssea (kg)', color: '#94a3b8', get: d => d.bone },
-      visceral: { label: 'Gordura visceral', color: '#ef4444', get: d => d.visceral },
+      weight:   { label: 'Peso', unit: 'kg', color: '#22c55e', get: d => d.weight },
+      fat:      { label: 'Gordura corporal', unit: '%', color: '#f59e0b', get: d => d.fat },
+      fatMass:  { label: 'Massa gorda', unit: 'kg', color: '#f97316', get: d => d.fat != null ? +(d.weight * d.fat / 100).toFixed(2) : null },
+      lean:     { label: 'Massa magra', unit: 'kg', color: '#34d399', get: d => d.fat != null ? +(d.weight * (1 - d.fat / 100)).toFixed(2) : null },
+      muscle:   { label: 'Massa muscular', unit: 'kg', color: '#38bdf8', get: d => d.muscle },
+      water:    { label: 'Água corporal', unit: '%', color: '#0ea5e9', get: d => d.water },
+      protein:  { label: 'Proteína', unit: '% / kg', color: '#a78bfa', get: d => d.protein },
+      bone:     { label: 'Massa óssea', unit: 'kg', color: '#94a3b8', get: d => d.bone },
+      visceral: { label: 'Gordura visceral', unit: 'nível', color: '#ef4444', get: d => d.visceral },
       subcut:   {
         label: 'Gordura subcutânea',
+        unit: '%',
         color: '#fb7185',
         get: d => {
           if (d.subcut != null) return d.subcut;
-          // Estimativa aproximada se houver % gordura e visceral (não é medida clínica)
           if (d.fat != null && d.visceral != null) return +Math.max(0, d.fat - d.visceral * 0.8).toFixed(1);
           return null;
         }
       },
       ffmi: {
-        label: 'FFMI (kg/m²)',
+        label: 'FFMI',
+        unit: 'kg/m²',
         color: '#818cf8',
         get: d => {
           const p = state.profile;
@@ -2122,7 +2383,8 @@
         }
       },
       bmr: {
-        label: 'Metabolismo basal (kcal)',
+        label: 'Metabolismo basal',
+        unit: 'kcal',
         color: '#f97316',
         get: d => {
           const p = state.profile;
@@ -2131,7 +2393,8 @@
         }
       },
       tdee: {
-        label: 'Gasto diário estimado (kcal)',
+        label: 'Gasto diário estimado',
+        unit: 'kcal',
         color: '#eab308',
         get: d => {
           const p = state.profile;
@@ -2141,7 +2404,8 @@
         }
       },
       metAge: {
-        label: 'Idade metabólica (anos)',
+        label: 'Idade metabólica',
+        unit: 'anos',
         color: '#c084fc',
         get: d => {
           const p = state.profile;
@@ -2151,6 +2415,7 @@
       },
       bodyScore: {
         label: 'Pontuação corporal',
+        unit: '0–100',
         color: '#22c55e',
         get: d => {
           const p = state.profile;
@@ -2160,20 +2425,61 @@
       }
     };
 
-    function renderChart() {
-      const ctx = document.getElementById('weightChart');
-      const hint = document.getElementById('chartEmptyHint');
-      if (!ctx) return;
-      const data = state.weighings.slice(-60);
-      if (weightChart) { weightChart.destroy(); weightChart = null; }
+    function chartFullLabel(cfg) {
+      if (!cfg) return '';
+      return cfg.unit ? `${cfg.label} (${cfg.unit})` : cfg.label;
+    }
 
-      const cfg = CHART_METRICS[chartMetric] || CHART_METRICS.weight;
+    // Cache de labels de data (evita toLocaleDateString repetido)
+    let _chartLabelCache = { key: '', labels: [] };
+    function getChartLabels(data) {
+      const key = data.map(d => d.date).join('|');
+      if (_chartLabelCache.key === key) return _chartLabelCache.labels;
       const labels = data.map(d => {
-        const dt = new Date(d.date);
-        return dt.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+        // Formato leve YYYY-MM-DD → dd/mm sem Date pesado
+        const p = (d.date || '').split('-');
+        if (p.length === 3) {
+          const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+          const mi = parseInt(p[1], 10) - 1;
+          return p[2] + ' ' + (months[mi] || p[1]);
+        }
+        return d.date;
       });
+      _chartLabelCache = { key, labels };
+      return labels;
+    }
+
+    let _chartRenderScheduled = false;
+    function scheduleRenderChart() {
+      if (_chartRenderScheduled) return;
+      _chartRenderScheduled = true;
+      requestAnimationFrame(() => {
+        _chartRenderScheduled = false;
+        renderChart();
+      });
+    }
+
+    function renderChart() {
+      const canvas = document.getElementById('weightChart');
+      const hint = document.getElementById('chartEmptyHint');
+      if (!canvas) return;
+
+      // Não trabalhar se o painel não estiver visível
+      const dash = document.getElementById('page-dashboard');
+      if (dash && !dash.classList.contains('active') && weightChart) {
+        // atualização adiada até o utilizador abrir o painel
+      }
+
+      const data = state.weighings.length > 60
+        ? state.weighings.slice(-60)
+        : state.weighings;
+      const cfg = CHART_METRICS[chartMetric] || CHART_METRICS.weight;
+      const labels = getChartLabels(data);
       const values = data.map(d => cfg.get(d));
       const hasData = values.some(v => v != null && !isNaN(v));
+      const n = values.length;
+      const pointR = n > 40 ? 0 : (n > 20 ? 2 : 3);
+      const fullLabel = chartFullLabel(cfg);
 
       if (hint) {
         if (!data.length) {
@@ -2189,32 +2495,135 @@
         }
       }
 
+      // Atualizar in-place (muito mais rápido que destroy + new Chart)
+      if (weightChart) {
+        const ds = weightChart.data.datasets[0];
+        weightChart.data.labels = labels;
+        ds.data = values;
+        ds.label = fullLabel;
+        ds.borderColor = cfg.color;
+        ds.backgroundColor = cfg.color + '22';
+        ds.pointBackgroundColor = cfg.color;
+        ds.pointRadius = pointR;
+        ds.pointHoverRadius = pointR ? pointR + 2 : 4;
+        if (weightChart.options.scales?.y?.title) {
+          weightChart.options.scales.y.title.display = !!cfg.unit;
+          weightChart.options.scales.y.title.text = cfg.unit || '';
+        }
+        // Guardar unit atual para tooltip
+        weightChart.$unit = cfg.unit || '';
+        weightChart.update('none'); // sem animação
+        return;
+      }
+
+      const ctx = canvas.getContext('2d');
       weightChart = new Chart(ctx, {
         type: 'line',
         data: {
           labels,
           datasets: [{
-            label: cfg.label,
+            label: fullLabel,
             data: values,
             borderColor: cfg.color,
             backgroundColor: cfg.color + '22',
             fill: true,
-            tension: 0.35,
-            pointRadius: 3,
+            tension: 0.25,
+            pointRadius: pointR,
+            pointHoverRadius: pointR ? pointR + 2 : 4,
             pointBackgroundColor: cfg.color,
+            borderWidth: 2,
             spanGaps: true
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          animation: false,
+          transitions: { active: { animation: { duration: 0 } } },
+          interaction: { mode: 'index', intersect: false },
+          devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+          plugins: {
+            legend: {
+              display: true,
+              labels: { color: '#94a3b8', boxWidth: 12, font: { size: 11 }, padding: 8 }
+            },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: (c) => {
+                  const v = c.parsed.y;
+                  if (v == null) return '';
+                  const u = (c.chart.$unit != null ? c.chart.$unit : cfg.unit) || '';
+                  return u ? `${v} ${u}` : String(v);
+                }
+              }
+            }
+          },
           scales: {
-            x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', maxTicksLimit: 7, font: { size: 11 } } },
-            y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 11 } } }
+            x: {
+              grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+              ticks: { color: '#64748b', maxTicksLimit: 6, font: { size: 10 }, maxRotation: 0 }
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+              ticks: { color: '#64748b', font: { size: 10 }, maxTicksLimit: 6 },
+              title: {
+                display: !!cfg.unit,
+                text: cfg.unit || '',
+                color: '#94a3b8',
+                font: { size: 11, weight: '600' }
+              }
+            }
           }
         }
       });
+      weightChart.$unit = cfg.unit || '';
+    }
+
+    async function shareCurrentChart() {
+      const cfg = CHART_METRICS[chartMetric] || CHART_METRICS.weight;
+      const canvas = document.getElementById('weightChart');
+      if (!canvas || !weightChart) {
+        showToast('Sem gráfico para partilhar');
+        return;
+      }
+      // Canvas com fundo escuro legível para partilha
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = canvas.width;
+      exportCanvas.height = canvas.height + 48;
+      const g = exportCanvas.getContext('2d');
+      g.fillStyle = '#0a1628';
+      g.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+      g.fillStyle = '#e2e8f0';
+      g.font = '600 16px system-ui,sans-serif';
+      g.fillText('App2fit · ' + chartFullLabel(cfg), 16, 28);
+      g.drawImage(canvas, 0, 48);
+      const blob = await new Promise(res => exportCanvas.toBlob(res, 'image/png'));
+      if (!blob) {
+        showToast('Não foi possível gerar a imagem');
+        return;
+      }
+      const file = new File([blob], `app2fit-${chartMetric}.png`, { type: 'image/png' });
+      const title = 'App2fit · ' + chartFullLabel(cfg);
+      try {
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ title, text: title, files: [file] });
+          showToast('Gráfico partilhado');
+          return;
+        }
+        if (navigator.share) {
+          await navigator.share({ title, text: title });
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+      // Fallback: descarregar
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('Gráfico guardado (partilha nativa indisponível)');
     }
 
     // ========== UI ==========
@@ -2632,6 +3041,7 @@
     }
 
     function refreshAll() {
+      _chartLabelCache = { key: '', labels: [] };
       renderDashboard();
       renderHistory();
       renderFullInsights();
@@ -2646,6 +3056,17 @@
         document.getElementById('page-' + btn.dataset.page).classList.add('active');
         if (btn.dataset.page === 'insights') renderFullInsights();
         if (btn.dataset.page === 'connections') updateFitbitUI();
+        if (btn.dataset.page === 'add') {
+          fillWeighingSelects('woWeighBefore', 'woWeighAfter');
+          const date = document.getElementById('woDate')?.value;
+          if (date) {
+            const auto = autoLinkWeighings(date);
+            if (auto.beforeIdx != null || auto.afterIdx != null) {
+              fillWeighingSelects('woWeighBefore', 'woWeighAfter', auto.beforeIdx, auto.afterIdx);
+              updateWeighPreviews();
+            }
+          }
+        }
       });
     });
 
@@ -2656,7 +3077,7 @@
       });
       const sel = document.getElementById('chartMetricSelect');
       if (sel && sel.value !== chartMetric) sel.value = chartMetric;
-      renderChart();
+      scheduleRenderChart();
     }
 
     document.getElementById('chartTabs')?.addEventListener('click', e => {
@@ -2727,12 +3148,28 @@
       refreshAll();
     });
 
+    function applyAutoLinkToForm() {
+      const date = document.getElementById('woDate')?.value;
+      const { beforeIdx, afterIdx } = autoLinkWeighings(date);
+      fillWeighingSelects('woWeighBefore', 'woWeighAfter', beforeIdx, afterIdx);
+      updateWeighPreviews();
+      if (beforeIdx != null || afterIdx != null) {
+        showToast('Pesagens associadas automaticamente');
+      } else {
+        showToast('Não há pesagens próximas para associar');
+      }
+    }
+
     document.getElementById('workoutForm').addEventListener('submit', e => {
       e.preventDefault();
       const num = id => {
         const v = document.getElementById(id).value;
         return v !== '' ? parseFloat(v) : null;
       };
+      const bi = document.getElementById('woWeighBefore').value;
+      const ai = document.getElementById('woWeighAfter').value;
+      const beforeW = bi !== '' ? state.weighings[+bi] : null;
+      const afterW = ai !== '' ? state.weighings[+ai] : null;
       const wo = {
         date: document.getElementById('woDate').value,
         type: document.getElementById('woType').value,
@@ -2742,57 +3179,33 @@
         avgHr: num('woAvgHr'),
         waterMl: num('woWaterMl'),
         notes: document.getElementById('woNotes').value.trim() || null,
-        before: {
-          weight: num('woWeightBefore'),
-          fat: num('woFatBefore'),
-          muscle: num('woMuscleBefore'),
-          bodyWater: num('woBodyWaterBefore')
-        },
-        after: {
-          weight: num('woWeightAfter'),
-          fat: num('woFatAfter'),
-          muscle: num('woMuscleAfter'),
-          bodyWater: num('woBodyWaterAfter')
-        },
+        weighBeforeIdx: bi !== '' ? +bi : null,
+        weighAfterIdx: ai !== '' ? +ai : null,
+        before: weighingToBody(beforeW),
+        after: weighingToBody(afterW),
         source: 'manual'
       };
       state.workouts.push(wo);
       state.workouts.sort((a, b) => a.date.localeCompare(b.date));
-
-      // Opcional: também registar pesagens before/after no histórico de corpo
-      if (wo.before.weight != null) {
-        state.weighings.push({
-          date: wo.date,
-          weight: wo.before.weight,
-          fat: wo.before.fat,
-          muscle: wo.before.muscle,
-          water: wo.before.bodyWater,
-          bone: null,
-          visceral: null,
-          note: 'Antes do treino'
-        });
-      }
-      if (wo.after.weight != null) {
-        state.weighings.push({
-          date: wo.date,
-          weight: wo.after.weight,
-          fat: wo.after.fat,
-          muscle: wo.after.muscle,
-          water: wo.after.bodyWater,
-          bone: null,
-          visceral: null,
-          note: 'Depois do treino'
-        });
-      }
-      state.weighings.sort((a, b) => a.date.localeCompare(b.date));
       save(state);
 
       document.getElementById('workoutForm').reset();
       document.getElementById('woDate').value = new Date().toISOString().slice(0, 10);
+      fillWeighingSelects('woWeighBefore', 'woWeighAfter');
+      updateWeighPreviews();
       showToast('Treino e análise guardados');
       document.querySelector('[data-page="dashboard"]').click();
       refreshAll();
     });
+
+    document.getElementById('woDate')?.addEventListener('change', () => {
+      fillWeighingSelects('woWeighBefore', 'woWeighAfter');
+      applyAutoLinkToForm();
+    });
+    document.getElementById('woWeighBefore')?.addEventListener('change', updateWeighPreviews);
+    document.getElementById('woWeighAfter')?.addEventListener('change', updateWeighPreviews);
+    document.getElementById('woWaterMl')?.addEventListener('input', updateWeighPreviews);
+    document.getElementById('btnAutoLinkWeigh')?.addEventListener('click', applyAutoLinkToForm);
 
     // CSV Import UI
     const importZone = document.getElementById('importZone');
@@ -2864,6 +3277,16 @@
       document.getElementById('ewoAvgHr').value = wo.avgHr ?? '';
       document.getElementById('ewoWaterMl').value = wo.waterMl ?? '';
       document.getElementById('ewoNotes').value = wo.notes ?? '';
+      fillWeighingSelects('ewoWeighBefore', 'ewoWeighAfter', wo.weighBeforeIdx, wo.weighAfterIdx);
+      // Se não há índices mas há before/after por valor, tentar reassociar
+      if ((wo.weighBeforeIdx == null || wo.weighAfterIdx == null) && wo.date) {
+        const auto = autoLinkWeighings(wo.date);
+        fillWeighingSelects(
+          'ewoWeighBefore', 'ewoWeighAfter',
+          wo.weighBeforeIdx ?? auto.beforeIdx,
+          wo.weighAfterIdx ?? auto.afterIdx
+        );
+      }
       document.getElementById('editWorkoutModal').classList.add('open');
     };
 
@@ -2905,6 +3328,10 @@
       e.preventDefault();
       const idx = parseInt(document.getElementById('ewoIdx').value, 10);
       if (isNaN(idx) || !state.workouts[idx]) return;
+      const bi = document.getElementById('ewoWeighBefore').value;
+      const ai = document.getElementById('ewoWeighAfter').value;
+      const beforeW = bi !== '' ? state.weighings[+bi] : null;
+      const afterW = ai !== '' ? state.weighings[+ai] : null;
       state.workouts[idx] = {
         ...state.workouts[idx],
         date: document.getElementById('ewoDate').value,
@@ -2914,7 +3341,11 @@
         calories: numOrNull('ewoCalories'),
         avgHr: numOrNull('ewoAvgHr'),
         waterMl: numOrNull('ewoWaterMl'),
-        notes: document.getElementById('ewoNotes').value.trim() || null
+        notes: document.getElementById('ewoNotes').value.trim() || null,
+        weighBeforeIdx: bi !== '' ? +bi : null,
+        weighAfterIdx: ai !== '' ? +ai : null,
+        before: weighingToBody(beforeW),
+        after: weighingToBody(afterW)
       };
       state.workouts.sort((a, b) => a.date.localeCompare(b.date));
       save(state);
@@ -2935,7 +3366,95 @@
 
     document.getElementById('wDate').value = new Date().toISOString().slice(0, 10);
     document.getElementById('woDate').value = new Date().toISOString().slice(0, 10);
-    document.getElementById('btnExportPdf')?.addEventListener('click', exportPdf);
+    fillWeighingSelects('woWeighBefore', 'woWeighAfter');
+    document.getElementById('btnExportPdf')?.addEventListener('click', () => exportPdf());
+    document.getElementById('btnShareChart')?.addEventListener('click', () => shareCurrentChart());
+
+    // ========== Backup ==========
+    function buildBackupPayload() {
+      return {
+        app: 'App2fit',
+        version: 7,
+        exportedAt: new Date().toISOString(),
+        profile: state.profile,
+        weighings: state.weighings,
+        workouts: state.workouts,
+        activities: state.activities,
+        connections: {
+          // não exportar tokens sensíveis por defeito — só clientId Fitbit
+          fitbit: state.connections?.fitbit ? {
+            clientId: state.connections.fitbit.clientId || null
+          } : null
+        }
+      };
+    }
+
+    function downloadBackup() {
+      const payload = buildBackupPayload();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.href = URL.createObjectURL(blob);
+      a.download = `app2fit-backup-${stamp}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('Backup descarregado');
+      return a.download;
+    }
+
+    document.getElementById('btnBackupDownload')?.addEventListener('click', () => {
+      downloadBackup();
+      const hint = document.getElementById('backupDriveHint');
+      if (hint) hint.style.display = 'none';
+    });
+
+    document.getElementById('btnBackupDrive')?.addEventListener('click', () => {
+      downloadBackup();
+      const hint = document.getElementById('backupDriveHint');
+      if (hint) hint.style.display = 'block';
+      window.open('https://drive.google.com/drive/u/0/my-drive', '_blank', 'noopener');
+    });
+
+    document.getElementById('btnBackupRestore')?.addEventListener('click', () => {
+      document.getElementById('backupFileInput').click();
+    });
+
+    document.getElementById('backupFileInput')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!data || (!data.weighings && !data.profile && !data.workouts)) {
+          showToast('Ficheiro de backup inválido');
+          return;
+        }
+        if (!confirm('Restaurar este backup? Os dados atuais serão substituídos.')) return;
+        state.profile = data.profile || null;
+        state.weighings = Array.isArray(data.weighings) ? data.weighings : [];
+        state.workouts = Array.isArray(data.workouts) ? data.workouts : [];
+        state.activities = Array.isArray(data.activities) ? data.activities : [];
+        if (data.connections?.fitbit?.clientId) {
+          if (!state.connections) state.connections = {};
+          state.connections.fitbit = { ...(state.connections.fitbit || {}), clientId: data.connections.fitbit.clientId };
+        }
+        save(state);
+        showToast('Backup restaurado');
+        refreshAll();
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao ler o backup');
+      }
+    });
+
+    document.getElementById('btnHcHelp')?.addEventListener('click', () => {
+      const note = document.getElementById('hcHelpNote');
+      if (note) {
+        note.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        showToast('Health Connect: use exportação CSV das apps ligadas');
+      }
+    });
 
     // Fitbit UI events
     document.getElementById('btnFitbitConnect').addEventListener('click', () => {

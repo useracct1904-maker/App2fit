@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bodymetrics-v5';
+const CACHE_NAME = 'app2fit-v9';
 const ASSETS = [
   './',
   './index.html',
