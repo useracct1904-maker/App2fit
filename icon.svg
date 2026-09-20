@@ -1,18 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="App2Fit">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f766e"/>
-      <stop offset="50%" stop-color="#14b8a6"/>
-      <stop offset="100%" stop-color="#22c55e"/>
+    <linearGradient id="a2f" x1="12%" y1="88%" x2="88%" y2="12%">
+      <stop offset="0%" stop-color="#00e8a0"/>
+      <stop offset="55%" stop-color="#00d4c0"/>
+      <stop offset="100%" stop-color="#2ee6ff"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="#0a1628"/>
-  <!-- stylized "2" as energy/fit pulse -->
-  <path d="M140 175c0-28 24-48 58-48h95c42 0 72 28 72 66 0 30-16 52-48 70l-88 48c-8 4-12 10-12 18v12h148"
-        stroke="url(#g)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <!-- upward fitness arrow -->
-  <path d="M340 340 L380 280 L420 340" stroke="#22c55e" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M380 290 V380" stroke="#22c55e" stroke-width="28" stroke-linecap="round"/>
-  <!-- A2F mark -->
-  <text x="256" y="455" text-anchor="middle" fill="#e2e8f0" font-family="system-ui,Segoe UI,sans-serif" font-weight="800" font-size="52" letter-spacing="4">A2F</text>
+  <rect width="512" height="512" fill="#000"/>
+  <!-- speed lines -->
+  <g fill="none" stroke="url(#a2f)" stroke-linecap="round">
+    <path stroke-width="28" d="M48 175 H195"/>
+    <path stroke-width="28" d="M48 228 H175"/>
+    <path stroke-width="26" d="M58 280 H160"/>
+    <path stroke-width="22" d="M88 330 H145"/>
+  </g>
+  <!-- profile 2 + face -->
+  <path fill="none" stroke="url(#a2f)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"
+        d="M155 370
+           C155 300 160 240 205 185
+           C255 120 340 95 395 130
+           C445 160 465 220 435 270
+           C415 305 365 320 325 300
+           C295 285 285 250 305 220
+           C320 198 355 195 385 215"/>
+  <path fill="none" stroke="url(#a2f)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"
+        d="M175 355 C215 415 285 450 355 435 C390 428 415 410 430 385"/>
+  <!-- arrow up -->
+  <path fill="url(#a2f)" d="M300 470 L365 375 L430 470 L395 470 L395 505 L335 505 L335 470 Z"/>
 </svg>

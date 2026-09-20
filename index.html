@@ -6,12 +6,18 @@
   <meta name="theme-color" content="#0a1628" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="App2fit — composição corporal, treinos e evolução. Métricas avançadas e análise por IA." />
-  <title>App2fit</title>
+  <meta name="description" content="App2Fit — composição corporal, treinos e evolução. Métricas avançadas e análise por IA." />
+  <title>App2Fit</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="icon" type="image/svg+xml" href="icons/mark.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/mark-192.png" />
+  <link rel="apple-touch-icon" href="icons/mark-192.png" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script type="module">
+    import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
+    window.pdfjsLib = pdfjsLib;
+  </script>
   <style>
     :root {
       --bg: #0a1628;
@@ -51,7 +57,15 @@
       display: flex; align-items: center; justify-content: space-between;
     }
     .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; }
-    .logo svg { width: 28px; height: 28px; }
+    .logo img { width: 32px; height: 32px; border-radius: 8px; background: #000; }
+    .logo-text { font-weight: 700; letter-spacing: -0.02em; }
+    .logo-2 {
+      background: linear-gradient(135deg, #00e8a0, #3af0ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
     .header-actions { display: flex; gap: 8px; align-items: center; }
 
     .btn {
@@ -405,8 +419,8 @@
 
   <header class="header">
     <div class="logo">
-      <img src="icon.svg" alt="" width="28" height="28" style="border-radius:7px;" />
-      App2fit
+      <img src="icons/mark-192.png" alt="" width="32" height="32" style="border-radius:8px;background:#000" />
+      <span class="logo-text">App<span class="logo-2">2</span>Fit</span>
     </div>
     <div class="header-actions">
       <button class="btn btn-ghost btn-sm" id="btnProfile" title="Perfil">Perfil</button>
@@ -456,6 +470,17 @@
           <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Distância</div></div>
         </div>
         <p style="font-size:0.78rem;color:var(--text-dim);margin-top:10px;">Lista completa de treinos em <strong>Histórico</strong>.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Sono</div>
+        <div class="card-grid" id="sleepGrid">
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Última noite</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Média 7d</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">AHI / score</div></div>
+          <div class="metric-card"><div class="metric-value">—</div><div class="metric-label">Qualidade</div></div>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-top:10px;">Importe CSV Zepp (sono) ou CPAP (myAir). Análise cruzada na página <strong>IA</strong>.</p>
       </div>
 
       <div class="section">
@@ -520,6 +545,7 @@
         <div class="mini-tabs" id="historyTabs" style="margin-bottom:14px;">
           <button type="button" class="mini-tab active" data-hist="weighings">Pesagens</button>
           <button type="button" class="mini-tab" data-hist="workouts">Treinos</button>
+          <button type="button" class="mini-tab" data-hist="sleep">Sono</button>
         </div>
         <div id="historyWeighingsBlock">
           <div class="section-title">Histórico de pesagens</div>
@@ -533,6 +559,12 @@
             <div class="empty"><p>Sem treinos ainda.</p></div>
           </div>
         </div>
+        <div id="historySleepBlock" style="display:none;">
+          <div class="section-title">Histórico de sono</div>
+          <div class="card" id="historySleepList">
+            <div class="empty"><p>Sem dados de sono. Importe CSV Zepp ou CPAP.</p></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -541,10 +573,10 @@
       <div class="section">
         <div class="section-title">Importar ficheiro CSV</div>
         <div class="import-zone" id="importZone">
-          <input type="file" id="csvFile" accept=".csv,.txt,.gpx,text/csv,application/gpx+xml" multiple />
+          <input type="file" id="csvFile" accept=".csv,.txt,.gpx,.pdf,text/csv,application/gpx+xml,application/pdf" multiple />
           <div class="import-icon">📄</div>
-          <div class="import-text">Toque para escolher CSV ou GPX</div>
-          <div class="import-hint">Zepp/Amazfit (exportação CSV + GPX) · Runstar · Fitbit · Xiaomi · Renpho</div>
+          <div class="import-text">Toque para escolher CSV, GPX ou PDF CPAP</div>
+          <div class="import-hint">PDF Philips (resumo + gráficos) · CSV Zepp/CPAP/OSCAR · Fitbit</div>
         </div>
         <div id="importResult" style="display:none; margin-bottom:16px;"></div>
       </div>
@@ -672,6 +704,12 @@
     <div id="page-insights" class="page">
       <div class="section">
         <div class="section-title">Relatórios de inteligência artificial</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <button type="button" class="btn btn-sm btn-outline-accent" id="btnCopySleepPrompt">Copiar prompt IA (sono)</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:12px;line-height:1.4;">
+          A análise local usa regras baseadas em evidência. Cole o prompt em <strong>Grok</strong>, <strong>ChatGPT</strong> ou <strong>Claude</strong> para um resumo narrativo e sugestões personalizadas.
+        </p>
         <div id="fullInsights">
           <div class="empty"><p>Precisa de dados para gerar análises.</p></div>
         </div>
@@ -971,10 +1009,12 @@
           weighings: d.weighings || [],
           connections: d.connections || {},
           activities: d.activities || [],
-          workouts: d.workouts || []
+          workouts: d.workouts || [],
+          sleep: d.sleep || [],
+          cpapReports: d.cpapReports || []
         };
       } catch {
-        return { profile: null, weighings: [], connections: {}, activities: [], workouts: [] };
+        return { profile: null, weighings: [], connections: {}, activities: [], workouts: [], sleep: [], cpapReports: [] };
       }
     }
     function save(data) {
@@ -984,6 +1024,8 @@
     if (!state.connections) state.connections = {};
     if (!state.activities) state.activities = [];
     if (!state.workouts) state.workouts = [];
+    if (!state.sleep) state.sleep = [];
+    if (!state.cpapReports) state.cpapReports = [];
     let chartMetric = 'weight';
 
     // ========== Fitbit OAuth (PKCE) ==========
@@ -1576,7 +1618,7 @@
 
       return `
         <div class="report">
-          <h1>App2fit — Relatório completo</h1>
+          <h1>App2Fit — Relatório completo</h1>
           <p class="sub">${p.name || 'Utilizador'} · ${sex === 'M' ? 'Masculino' : 'Feminino'} · ${p.height} cm · ${p.age || '—'} anos · pesagem ${new Date(last.date).toLocaleDateString('pt-PT')} · gerado ${new Date().toLocaleString('pt-PT')}</p>
           <p class="lead"><strong>Peso:</strong> ${last.weight.toFixed(1)} kg</p>
 
@@ -1695,7 +1737,26 @@
       distance: ['distance', 'distância', 'distance (km)', 'distance(m)', 'distance km', 'dist'],
       duration: ['duration', 'duração', 'time cost', 'cost time', 'exercise time', 'sport time', 'min', 'minutes'],
       type: ['type', 'sport type', 'sport', 'activity type', 'workout type', 'tipo', 'mode'],
-      avghr: ['avg hr', 'average hr', 'avg heart rate', 'average heart rate', 'hr', 'heart rate', 'avghr', 'avg_hr']
+      avghr: ['avg hr', 'average hr', 'avg heart rate', 'average heart rate', 'hr', 'heart rate', 'avghr', 'avg_hr'],
+      // Sono Zepp / genérico
+      deep: ['deep sleep time', 'deep sleep', 'deep', 'sono profundo', 'deep min', 'deeptime'],
+      light: ['shallow sleep time', 'light sleep', 'shallow', 'light', 'sono leve', 'light min', 'lighttime'],
+      rem: ['remtime', 'rem time', 'rem sleep', 'rem', 'sono rem'],
+      awake: ['wake time', 'awake', 'awake time', 'tempo acordado', 'waketime'],
+      start: ['starttime', 'start time', 'from', 'inicio', 'início', 'bedtime'],
+      end: ['stoptime', 'stop time', 'to', 'fim', 'endtime', 'waketime clock'],
+      score: ['sleep score', 'score', 'pontuação', 'qualidade', 'quality'],
+      totalSleep: ['hours', 'total sleep', 'sleep duration', 'duração sono', 'duration hours', 'total min'],
+      naps: ['naps', 'sestas'],
+      // CPAP / myAir / OSCAR-style
+      ahi: ['ahi', 'events per hour', 'eventos/h', 'apnea hypopnea', 'apnea-hypopnea index'],
+      usageHrs: ['usage', 'usage hours', 'hours used', 'horas uso', 'mask on', 'therapy hours', 'usage hours est', 'usage_hours_est', 'horas'],
+      leak: ['leak', 'leak 95', 'leak rate', 'fuga', 'median leak', '95th percentile leak'],
+      oa: ['oa', 'obstructive', 'obstructive apnea'],
+      ca: ['ca', 'central', 'central apnea'],
+      hypopnea: ['hypopnea', 'hi', 'hypopnea index'],
+      pressure: ['pressure', 'avg pressure', 'pressão', 'epap', 'ipap'],
+      myair: ['myair', 'myair score', 'therapy score']
     };
 
     function normalizeHeader(h) {
@@ -1875,6 +1936,637 @@
         });
       } catch (e) { console.error(e); }
       return workouts;
+    }
+
+    /** Converte minutos ou "H:MM" para minutos */
+    function toMinutes(val) {
+      if (val == null || val === '') return null;
+      const s = String(val).trim();
+      if (/^\d{1,2}:\d{2}/.test(s)) {
+        const [h, m] = s.split(':').map(Number);
+        return h * 60 + m;
+      }
+      const n = parseNumber(s);
+      if (n == null) return null;
+      // Se valor < 24 parece horas decimais
+      if (n > 0 && n <= 16 && String(val).includes('.')) return Math.round(n * 60);
+      return Math.round(n);
+    }
+
+    /**
+     * Sono Zepp agregado: deep/shallow/wake/REM (min), starttime, stoptime
+     * Também formatos genéricos com score e duração.
+     */
+    function parseSleepCSV(text) {
+      const { lines, delim, colMap } = parseCSVText(text);
+      const hasSleepCols = colMap.deep != null || colMap.light != null || colMap.rem != null ||
+        colMap.score != null || colMap.totalSleep != null ||
+        (colMap.start != null && colMap.end != null);
+      // Evitar confundir com body (peso) ou só passos
+      if (!hasSleepCols && colMap.weight != null) return [];
+      if (!hasSleepCols && colMap.steps != null && colMap.deep == null) return [];
+      if (!hasSleepCols) return [];
+
+      const sessions = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(delim).map(c => c.replace(/^["']|["']$/g, '').trim());
+        if (cols.length < 2) continue;
+
+        let date = null;
+        if (colMap.date != null) date = parseDate(cols[colMap.date]);
+        if (!date && colMap.start != null) date = parseDate(cols[colMap.start]);
+        if (!date && colMap.end != null) date = parseDate(cols[colMap.end]);
+        if (!date) continue;
+
+        const deep = colMap.deep != null ? toMinutes(cols[colMap.deep]) : null;
+        const light = colMap.light != null ? toMinutes(cols[colMap.light]) : null;
+        const rem = colMap.rem != null ? toMinutes(cols[colMap.rem]) : null;
+        const awake = colMap.awake != null ? toMinutes(cols[colMap.awake]) : null;
+        let totalMin = null;
+        if (colMap.totalSleep != null) {
+          const t = parseNumber(cols[colMap.totalSleep]);
+          if (t != null) totalMin = t <= 24 ? Math.round(t * 60) : Math.round(t);
+        }
+        if (totalMin == null && (deep != null || light != null || rem != null)) {
+          totalMin = (deep || 0) + (light || 0) + (rem || 0);
+          if (totalMin === 0) totalMin = null;
+        }
+        // start/end podem dar duração
+        if (totalMin == null && colMap.start != null && colMap.end != null) {
+          const s = new Date(cols[colMap.start].replace(' ', 'T'));
+          const e = new Date(cols[colMap.end].replace(' ', 'T'));
+          if (!isNaN(s) && !isNaN(e) && e > s) totalMin = Math.round((e - s) / 60000);
+        }
+
+        const score = colMap.score != null ? parseNumber(cols[colMap.score]) : null;
+        if (totalMin == null && score == null && deep == null) continue;
+
+        sessions.push({
+          date,
+          totalMin,
+          deepMin: deep,
+          lightMin: light,
+          remMin: rem,
+          awakeMin: awake,
+          score,
+          start: colMap.start != null ? cols[colMap.start] : null,
+          end: colMap.end != null ? cols[colMap.end] : null,
+          source: 'zepp',
+          ahi: null,
+          usageHrs: null,
+          leak: null
+        });
+      }
+      return sessions;
+    }
+
+    /** CPAP: ResMed myAir / OSCAR / estimativas de gráfico PDF — AHI, usage, leak */
+    function parseCpapCSV(text) {
+      const { lines, delim, colMap } = parseCSVText(text);
+      const headers = (lines[0] || '').split(delim).map(h => normalizeHeader(h.replace(/^["']|["']$/g, '')));
+      const findCol = (...names) => {
+        for (const n of names) {
+          const i = headers.findIndex(h => h === n || h.includes(n));
+          if (i >= 0) return i;
+        }
+        return null;
+      };
+      // Mapear colunas explícitas (OSCAR, myAir, estimativas de gráfico)
+      const idx = {
+        date: colMap.date ?? findCol('date', 'data', 'period'),
+        ahi: colMap.ahi ?? findCol('ahi est', 'ahi_est', 'ahi'),
+        usageHrs: colMap.usageHrs ?? findCol('usage hours est', 'usage_hours_est', 'usage hours', 'hours', 'horas'),
+        leak: colMap.leak ?? findCol('leak pct est', 'leak_pct_est', 'leak'),
+        myair: colMap.myair ?? findCol('myair'),
+        oa: colMap.oa ?? findCol('oa est', 'oa_est', 'oa', 'obstructive'),
+        ca: colMap.ca ?? findCol('ca est', 'ca_est', 'ca', 'central'),
+        hyp: findCol('hypopnea est', 'hypopnea_est', 'hypopnea', 'hi'),
+        rera: findCol('rera est', 'rera_est', 'rera'),
+        pressure: colMap.pressure ?? findCol('pressure cmh2o est', 'pressure_cmh2o_est', 'pressure'),
+        fl: findCol('flow limit est', 'flow_limit_est', 'flow limit'),
+        vs: findCol('snore vs est', 'snore_vs_est', 'snore'),
+        csr: findCol('csr pct est', 'csr_pct_est', 'csr'),
+        source: findCol('source', 'origem')
+      };
+      const isCpap = idx.ahi != null || idx.usageHrs != null || idx.leak != null || idx.myair != null || idx.oa != null;
+      if (!isCpap) return [];
+
+      const headerLine = (lines[0] || '').toLowerCase();
+      const isEstimate = /chart_estimate|usage_hours_est|estimado|_est/.test(headerLine) ||
+        /chart_estimate|estimado/.test(text.slice(0, 800).toLowerCase());
+
+      const sessions = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(delim).map(c => c.replace(/^["']|["']$/g, '').trim());
+        if (cols.length < 2) continue;
+        let date = idx.date != null ? parseDate(cols[idx.date]) : null;
+        if (!date) continue;
+
+        const ahi = idx.ahi != null ? parseNumber(cols[idx.ahi]) : null;
+        let usageHrs = idx.usageHrs != null ? parseNumber(cols[idx.usageHrs]) : null;
+        if (usageHrs != null && usageHrs > 24) usageHrs = usageHrs / 60;
+        const leak = idx.leak != null ? parseNumber(cols[idx.leak]) : null;
+        const myair = idx.myair != null ? parseNumber(cols[idx.myair]) : null;
+        const totalMin = usageHrs != null ? Math.round(usageHrs * 60) : null;
+        if (ahi == null && usageHrs == null && leak == null) continue;
+
+        let src = isEstimate ? 'cpap-chart-est' : 'cpap';
+        if (idx.source != null && cols[idx.source]) {
+          const s = cols[idx.source];
+          src = /chart|estim/.test(s) ? 'cpap-chart-est' : s;
+        }
+
+        sessions.push({
+          date,
+          totalMin,
+          deepMin: null,
+          lightMin: null,
+          remMin: null,
+          awakeMin: null,
+          score: myair,
+          start: null,
+          end: null,
+          source: src,
+          ahi,
+          usageHrs,
+          leak,
+          oa: idx.oa != null ? parseNumber(cols[idx.oa]) : null,
+          ca: idx.ca != null ? parseNumber(cols[idx.ca]) : null,
+          hypopnea: idx.hyp != null ? parseNumber(cols[idx.hyp]) : null,
+          rera: idx.rera != null ? parseNumber(cols[idx.rera]) : null,
+          pressure: idx.pressure != null ? parseNumber(cols[idx.pressure]) : null,
+          flowLimit: idx.fl != null ? parseNumber(cols[idx.fl]) : null,
+          snore: idx.vs != null ? parseNumber(cols[idx.vs]) : null,
+          csr: idx.csr != null ? parseNumber(cols[idx.csr]) : null,
+          estimated: isEstimate || src === 'cpap-chart-est'
+        });
+      }
+      return sessions;
+    }
+
+    /** Converte "3 h 26 minutos 27 segundos" ou "6 h 24 minutos 16 segundos" → horas decimais */
+    function parseDurationPt(str) {
+      if (!str) return null;
+      const s = String(str).toLowerCase().replace(/\s+/g, ' ');
+      let hours = 0;
+      const d = s.match(/(\d+)\s*dias?/);
+      const h = s.match(/(\d+)\s*h/);
+      const m = s.match(/(\d+)\s*minut/);
+      const sec = s.match(/(\d+)\s*segund/);
+      if (d) hours += parseInt(d[1], 10) * 24;
+      if (h) hours += parseInt(h[1], 10);
+      if (m) hours += parseInt(m[1], 10) / 60;
+      if (sec) hours += parseInt(sec[1], 10) / 3600;
+      if (!d && !h && !m && !sec) {
+        const n = parseFloat(s.replace(',', '.'));
+        return isNaN(n) ? null : n;
+      }
+      return Math.round(hours * 100) / 100;
+    }
+
+    function parsePtNumber(str) {
+      if (str == null) return null;
+      const n = parseFloat(String(str).replace(/\s/g, '').replace(',', '.').replace(/[^\d.\-]/g, ''));
+      return isNaN(n) ? null : n;
+    }
+
+    /**
+     * Relatório Philips CareOrchestrator / DreamStation (PDF texto)
+     * Extrai resumo de adesão e IAH médio do período.
+     */
+    function parsePhilipsCpapReport(text) {
+      if (!text) return null;
+      const t = text.replace(/\r/g, '\n');
+      const isPhilips = /CareOrchestrator|DreamStation|Informações de Observância|Resumo de adesão|Média de IAH|Auto-CPAP|A-Flex/i.test(t);
+      if (!isPhilips && !/Relatório de tendência/i.test(t)) return null;
+
+      const pick = (re) => {
+        const m = t.match(re);
+        return m ? m[1].trim() : null;
+      };
+
+      // Intervalo 20/06/2026 - 18/09/2026
+      const range = pick(/Intervalo de datas[\s\S]{0,40}?(\d{1,2}\/\d{1,2}\/\d{4})\s*[-–]\s*(\d{1,2}\/\d{1,2}\/\d{4})/) ||
+        pick(/(\d{1,2}\/\d{1,2}\/\d{4})\s*[-–]\s*(\d{1,2}\/\d{1,2}\/\d{4})\s*\(\s*\d+\s*dias/i);
+      let dateFrom = null, dateTo = null;
+      const rangeM = t.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s*[-–]\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (rangeM) {
+        dateFrom = `${rangeM[3]}-${rangeM[2].padStart(2,'0')}-${rangeM[1].padStart(2,'0')}`;
+        dateTo = `${rangeM[6]}-${rangeM[5].padStart(2,'0')}-${rangeM[4].padStart(2,'0')}`;
+      }
+
+      const daysUsed = parsePtNumber(pick(/Dias com uso do aparelho\s*\n?\s*(\d+)/i));
+      const daysNoUse = parsePtNumber(pick(/Dias sem uso do aparelho\s*\n?\s*(\d+)/i));
+      const pctDaysUsed = parsePtNumber(pick(/Porcentagem de dias com uso do aparelho\s*\n?\s*([\d.,]+)/i));
+      const pctGte4 = parsePtNumber(pick(/Porcentagem de dias com uso\s*>=?\s*4\s*horas\s*\n?\s*([\d.,]+)/i));
+      const pctLt4 = parsePtNumber(pick(/Porcentagem de dias com uso\s*<\s*4\s*horas\s*\n?\s*([\d.,]+)/i));
+
+      const avgUseStr = pick(/Média de uso \(todos os dias\)\s*\n?\s*([^\n]+)/i) ||
+        pick(/Média de uso \(dias de uso\)\s*\n?\s*([^\n]+)/i);
+      const avgUseHrs = parseDurationPt(avgUseStr);
+      const maxUseHrs = parseDurationPt(pick(/Uso máximo \(1 dia\)\s*\n?\s*([^\n]+)/i));
+      const minUseHrs = parseDurationPt(pick(/Uso mínimo \(1 dia\)\s*\n?\s*([^\n]+)/i));
+
+      const pressureAvg = parsePtNumber(pick(/Pressão Média de Auto-CPAP\s*\n?\s*([\d.,]+)/i) ||
+        pick(/Pressão CPAP Média\s*\n?\s*([\d.,]+)/i));
+      const pressure90 = parsePtNumber(pick(/(?:De pressão do aparelho\s*<=?\s*90%\s*do tempo|Pressão 90%?)\s*\n?\s*([\d.,]+)/i));
+      const pressurePeak = parsePtNumber(pick(/Pressão Média do Pico de Auto-CPAP\s*\n?\s*([\d.,]+)/i));
+
+      const leakStr = pick(/Tempo Médio em Fuga Grande por Dia\s*\n?\s*([^\n]+)/i);
+      let leakMin = null;
+      if (leakStr) {
+        const lm = leakStr.match(/(\d+)\s*minut/);
+        const ls = leakStr.match(/(\d+)\s*segund/);
+        leakMin = (lm ? parseInt(lm[1], 10) : 0) + (ls ? parseInt(ls[1], 10) / 60 : 0);
+      }
+      const leakPct = parsePtNumber(pick(/%\s*média da noite em fuga grande\s*\n?\s*([\d.,]+)/i));
+
+      const ahi = parsePtNumber(pick(/Média de IAH\s*\n?\s*([\d.,]+)/i) ||
+        pick(/Média do índice de IAH\s*\n?\s*([\d.,]+)/i) ||
+        pick(/Média de IAH\s+([\d.,]+)/i));
+      const oa = parsePtNumber(pick(/Média do índice de AO\s*\n?\s*([\d.,]+)/i));
+      const ca = parsePtNumber(pick(/Média do índice de AC\s*\n?\s*([\d.,]+)/i));
+      const hypopnea = parsePtNumber(pick(/Média do índice de\s*hipopn[eé]ia\s*\n?\s*([\d.,]+)/i));
+      const rera = parsePtNumber(pick(/Média do índice RERA\s*\n?\s*([\d.,]+)/i));
+
+      const device = pick(/Dispositivo:\s*([^\n]+)/i) || pick(/(DreamStation[^\n]*)/i);
+
+      if (ahi == null && avgUseHrs == null && pctGte4 == null) return null;
+
+      return {
+        source: 'philips-careorchestrator',
+        device: device || 'DreamStation / Philips',
+        dateFrom,
+        dateTo: dateTo || dateFrom,
+        daysUsed,
+        daysNoUse,
+        pctDaysUsed,
+        pctGte4h: pctGte4,
+        pctLt4h: pctLt4,
+        avgUseHrs,
+        maxUseHrs,
+        minUseHrs,
+        pressureAvg,
+        pressure90,
+        pressurePeak,
+        largeLeakMinPerDay: leakMin,
+        largeLeakPct: leakPct,
+        ahi,
+        oa,
+        ca,
+        hypopnea,
+        rera,
+        importedAt: new Date().toISOString()
+      };
+    }
+
+    async function ensurePdfjs() {
+      if (window.pdfjsLib) return window.pdfjsLib;
+      for (let i = 0; i < 40; i++) {
+        if (window.pdfjsLib) return window.pdfjsLib;
+        await new Promise(r => setTimeout(r, 100));
+      }
+      throw new Error('PDF.js ainda a carregar — tente de novo em 2 segundos');
+    }
+
+    async function extractPdfText(file) {
+      const pdfjsLib = await ensurePdfjs();
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      let full = '';
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        const line = content.items.map(it => it.str).join(' ');
+        full += line + '\n';
+      }
+      return { text: full, pdf };
+    }
+
+    /** Renderiza página PDF para ImageData (canvas) */
+    async function renderPdfPageToImageData(pdf, pageNum, scale) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: scale || 2.0 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+
+    function imgIndex(img, x, y) {
+      return (y * img.width + x) * 4;
+    }
+
+    /**
+     * Estimativa diária a partir do gráfico de barras "Horas de Utilização" (pág. ~2).
+     * Calibra com média/máximo do relatório de texto quando disponíveis.
+     */
+    function estimateUsageBarsFromImage(img, report) {
+      const w = img.width, h = img.height, d = img.data;
+      const isRed = (i) => d[i] > 180 && d[i+1] < 90 && d[i+2] < 90;
+      const isGreen = (i) => d[i+1] > 70 && d[i+1] < 180 && d[i] < 80 && d[i+2] < 100 && d[i+1] > d[i] + 30;
+      // bounding box de barras
+      let minX = w, maxX = 0, minY = h, maxY = 0, count = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = imgIndex(img, x, y);
+          if (isRed(i) || isGreen(i)) {
+            if (x < minX) minX = x; if (x > maxX) maxX = x;
+            if (y < minY) minY = y; if (y > maxY) maxY = y;
+            count++;
+          }
+        }
+      }
+      if (count < 50 || maxX <= minX) return null;
+
+      let dateFrom = report?.dateFrom ? new Date(report.dateFrom + 'T12:00:00') : null;
+      let dateTo = report?.dateTo ? new Date(report.dateTo + 'T12:00:00') : null;
+      let nDays = 91;
+      if (dateFrom && dateTo && !isNaN(dateFrom) && !isNaN(dateTo)) {
+        nDays = Math.max(1, Math.round((dateTo - dateFrom) / 86400000) + 1);
+      }
+      const sw = maxX - minX + 1;
+      const heights = [];
+      for (let day = 0; day < nDays; day++) {
+        const xa = minX + Math.floor(day * sw / nDays);
+        const xb = minX + Math.floor((day + 1) * sw / nDays);
+        let top = null;
+        for (let y = minY; y <= maxY; y++) {
+          for (let x = xa; x < xb; x++) {
+            const i = imgIndex(img, x, y);
+            if (isRed(i) || isGreen(i)) { top = y; break; }
+          }
+          if (top != null) break;
+        }
+        if (top == null) { heights.push(null); continue; }
+        heights.push(maxY - top);
+      }
+      const valid = heights.filter(v => v != null && v > 0);
+      if (valid.length < 5) return null;
+      const maxH = Math.max(...valid);
+      const targetMax = report?.maxUseHrs != null ? report.maxUseHrs : 6.4;
+      const targetMean = report?.avgUseHrs != null ? report.avgUseHrs : 3.44;
+      let hours = heights.map(hpx => hpx == null ? null : (hpx / maxH) * targetMax);
+      const mean = hours.filter(x => x != null).reduce((a, b) => a + b, 0) / hours.filter(x => x != null).length;
+      if (mean > 0) hours = hours.map(x => x == null ? null : x * (targetMean / mean));
+
+      const sessions = [];
+      for (let day = 0; day < nDays; day++) {
+        if (hours[day] == null) continue;
+        const dt = dateFrom
+          ? new Date(dateFrom.getTime() + day * 86400000)
+          : null;
+        if (!dt || isNaN(dt)) continue;
+        const iso = dt.toISOString().slice(0, 10);
+        const u = Math.round(hours[day] * 100) / 100;
+        sessions.push({
+          date: iso,
+          totalMin: Math.round(u * 60),
+          deepMin: null, lightMin: null, remMin: null, awakeMin: null,
+          score: null, start: null, end: null,
+          source: 'cpap-chart-est',
+          ahi: report?.ahi ?? null,
+          usageHrs: u,
+          leak: null,
+          oa: report?.oa ?? null,
+          ca: report?.ca ?? null,
+          pressure: report?.pressureAvg ?? null,
+          estimated: true,
+          note: 'Estimativa do gráfico de horas (PDF)'
+        });
+      }
+      return sessions;
+    }
+
+    /**
+     * Amostra linhas de índices (AO/AC/hipopneia/pressão) numa página de gráficos.
+     * Devolve série normalizada 0–1 por dia; o caller calibra com médias do relatório.
+     */
+    function sampleLineSeriesNormalized(img, nDays) {
+      const w = img.width, h = img.height, d = img.data;
+      // tinta: não-branco
+      const ink = new Uint8Array(w * h);
+      let minX = w, maxX = 0, minY = h, maxY = 0, n = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = imgIndex(img, x, y);
+          if (d[i] < 200 || d[i+1] < 200 || d[i+2] < 200) {
+            if (d[i] > 230 && d[i+1] > 230 && d[i+2] > 230) continue;
+            ink[y * w + x] = 1;
+            if (x < minX) minX = x; if (x > maxX) maxX = x;
+            if (y < minY) minY = y; if (y > maxY) maxY = y;
+            n++;
+          }
+        }
+      }
+      if (n < 100 || maxX <= minX) return null;
+      const sw = maxX - minX + 1;
+      const sh = maxY - minY + 1;
+      const series = [];
+      for (let day = 0; day < nDays; day++) {
+        const xa = minX + Math.floor(day * sw / nDays);
+        const xb = minX + Math.floor((day + 1) * sw / nDays);
+        const ys = [];
+        for (let y = minY; y <= maxY; y++) {
+          for (let x = xa; x < xb; x++) {
+            if (ink[y * w + x]) ys.push(y);
+          }
+        }
+        if (!ys.length) { series.push(null); continue; }
+        ys.sort((a, b) => a - b);
+        const yMed = ys[Math.floor(ys.length * 0.25)];
+        const frac = 1 - (yMed - minY) / sh;
+        series.push(Math.max(0, Math.min(1, frac)));
+      }
+      return series;
+    }
+
+    function calibrateSeries(norm, targetMean, targetMax) {
+      if (!norm) return null;
+      const valid = norm.filter(x => x != null);
+      if (valid.length < 5) return null;
+      let vals = norm.map(x => x == null ? null : x * (targetMax || 1));
+      const mean = vals.filter(x => x != null).reduce((a, b) => a + b, 0) / vals.filter(x => x != null).length;
+      if (mean > 0 && targetMean != null) {
+        const s = targetMean / mean;
+        vals = vals.map(x => x == null ? null : x * s);
+      }
+      return vals;
+    }
+
+    /** Extrai estimativas diárias dos gráficos do PDF Philips CareOrchestrator */
+    async function estimateCpapChartsFromPdf(pdf, report) {
+      if (!pdf || pdf.numPages < 2) return [];
+      const nDays = (() => {
+        if (report?.dateFrom && report?.dateTo) {
+          const a = new Date(report.dateFrom + 'T12:00:00');
+          const b = new Date(report.dateTo + 'T12:00:00');
+          if (!isNaN(a) && !isNaN(b)) return Math.max(1, Math.round((b - a) / 86400000) + 1);
+        }
+        return 91;
+      })();
+
+      // Página 2: horas de utilização (barras)
+      let sessions = [];
+      try {
+        const img2 = await renderPdfPageToImageData(pdf, Math.min(2, pdf.numPages), 2.2);
+        // crop inferior ~45% onde costuma estar o gráfico de horas
+        const cropH = Math.floor(img2.height * 0.45);
+        const cropY = Math.floor(img2.height * 0.42);
+        const cropped = {
+          width: img2.width,
+          height: cropH,
+          data: img2.data.slice(cropY * img2.width * 4, (cropY + cropH) * img2.width * 4)
+        };
+        // rebuild ImageData-like with correct stride - actually slice is wrong for multi-row
+        const cdata = new Uint8ClampedArray(img2.width * cropH * 4);
+        for (let y = 0; y < cropH; y++) {
+          const src = ((cropY + y) * img2.width) * 4;
+          cdata.set(img2.data.subarray(src, src + img2.width * 4), y * img2.width * 4);
+        }
+        const cropImg = { width: img2.width, height: cropH, data: cdata };
+        sessions = estimateUsageBarsFromImage(cropImg, report) || [];
+      } catch (e) {
+        console.warn('chart usage estimate failed', e);
+      }
+
+      // Página 3: pressão + índices — enriquecer sessões existentes
+      try {
+        if (pdf.numPages >= 3 && sessions.length) {
+          const img3 = await renderPdfPageToImageData(pdf, 3, 1.8);
+          // top band ~ pressure
+          const band = (y0f, y1f) => {
+            const y0 = Math.floor(img3.height * y0f);
+            const y1 = Math.floor(img3.height * y1f);
+            const hh = y1 - y0;
+            const data = new Uint8ClampedArray(img3.width * hh * 4);
+            for (let y = 0; y < hh; y++) {
+              const src = ((y0 + y) * img3.width) * 4;
+              data.set(img3.data.subarray(src, src + img3.width * 4), y * img3.width * 4);
+            }
+            return { width: img3.width, height: hh, data };
+          };
+          const pressureN = sampleLineSeriesNormalized(band(0.05, 0.28), nDays);
+          const pressure = calibrateSeries(pressureN, report?.pressureAvg ?? 11.4, 16);
+          const aoN = sampleLineSeriesNormalized(band(0.40, 0.62), nDays);
+          const ao = calibrateSeries(aoN, report?.oa ?? 3.4, 10);
+          const hypN = sampleLineSeriesNormalized(band(0.62, 0.82), nDays);
+          const hyp = calibrateSeries(hypN, report?.hypopnea ?? 2.6, 15);
+
+          sessions.forEach((s, i) => {
+            // map by date index
+            const idx = report?.dateFrom
+              ? Math.round((new Date(s.date + 'T12:00:00') - new Date(report.dateFrom + 'T12:00:00')) / 86400000)
+              : i;
+            if (pressure && pressure[idx] != null) s.pressure = Math.round(pressure[idx] * 10) / 10;
+            if (ao && ao[idx] != null) s.oa = Math.round(ao[idx] * 100) / 100;
+            if (hyp && hyp[idx] != null) s.hypopnea = Math.round(hyp[idx] * 100) / 100;
+            // AHI approx from components or period mean with variation
+            if (s.oa != null || s.hypopnea != null) {
+              s.ahi = Math.round(((s.oa || 0) + (s.ca || report?.ca || 0) + (s.hypopnea || 0)) * 100) / 100;
+            } else if (report?.ahi != null) {
+              s.ahi = report.ahi;
+            }
+            s.note = 'Estimativa dos gráficos do PDF CareOrchestrator';
+          });
+        }
+      } catch (e) {
+        console.warn('chart indices estimate failed', e);
+      }
+
+      // Página 4: fuga
+      try {
+        if (pdf.numPages >= 4 && sessions.length) {
+          const img4 = await renderPdfPageToImageData(pdf, 4, 1.8);
+          const y0 = Math.floor(img4.height * 0.06);
+          const y1 = Math.floor(img4.height * 0.32);
+          const hh = y1 - y0;
+          const data = new Uint8ClampedArray(img4.width * hh * 4);
+          for (let y = 0; y < hh; y++) {
+            const src = ((y0 + y) * img4.width) * 4;
+            data.set(img4.data.subarray(src, src + img4.width * 4), y * img4.width * 4);
+          }
+          const leakImg = { width: img4.width, height: hh, data };
+          // barras azuis de fuga
+          const leakBars = estimateUsageBarsFromImage(leakImg, {
+            dateFrom: report?.dateFrom,
+            dateTo: report?.dateTo,
+            avgUseHrs: report?.largeLeakPct ?? 3.2,
+            maxUseHrs: 35
+          });
+          if (leakBars) {
+            const byDate = {};
+            leakBars.forEach(b => { byDate[b.date] = b.usageHrs; });
+            sessions.forEach(s => {
+              if (byDate[s.date] != null) s.leak = byDate[s.date];
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('chart leak estimate failed', e);
+      }
+
+      return sessions;
+    }
+
+    function mergeCpapReport(report) {
+      if (!report) return 0;
+      const key = `${report.dateFrom}_${report.dateTo}_${report.ahi}`;
+      const exists = state.cpapReports.some(r =>
+        `${r.dateFrom}_${r.dateTo}_${r.ahi}` === key
+      );
+      if (!exists) {
+        state.cpapReports.push(report);
+        state.cpapReports.sort((a, b) => (a.dateTo || '').localeCompare(b.dateTo || ''));
+      }
+      // Registo de sono representativo na data final do período (médias)
+      if (report.dateTo) {
+        mergeSleep([{
+          date: report.dateTo,
+          totalMin: report.avgUseHrs != null ? Math.round(report.avgUseHrs * 60) : null,
+          deepMin: null,
+          lightMin: null,
+          remMin: null,
+          awakeMin: null,
+          score: null,
+          start: null,
+          end: null,
+          source: 'cpap',
+          ahi: report.ahi,
+          usageHrs: report.avgUseHrs,
+          leak: report.largeLeakMinPerDay,
+          oa: report.oa,
+          ca: report.ca,
+          pressure: report.pressureAvg,
+          note: `Relatório Philips ${report.dateFrom || ''}–${report.dateTo} · ≥4h: ${report.pctGte4h != null ? report.pctGte4h + '%' : '—'}`
+        }]);
+      }
+      return exists ? 0 : 1;
+    }
+
+    function mergeSleep(sessions) {
+      const map = {};
+      state.sleep.forEach(s => {
+        const k = `${s.date}_${s.source || 'x'}`;
+        map[k] = { ...s };
+      });
+      let added = 0;
+      sessions.forEach(s => {
+        const k = `${s.date}_${s.source || 'x'}`;
+        if (!map[k]) {
+          map[k] = s;
+          added++;
+        } else {
+          const e = map[k];
+          Object.keys(s).forEach(key => {
+            if (s[key] != null && (e[key] == null || e[key] === '')) e[key] = s[key];
+          });
+        }
+      });
+      state.sleep = Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+      return added;
     }
 
     function mergeActivities(daily) {
@@ -2107,61 +2799,249 @@
       return parts.join(' ');
     }
 
-    function importFile(file) {
+    function finishImport(msg) {
+      if (!msg.length) {
+        showToast('Nenhum dado reconhecido neste ficheiro');
+        return;
+      }
+      save(state);
+      const resultEl = document.getElementById('importResult');
+      if (resultEl) {
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = `
+          <div class="card" style="border-color: var(--accent); background: var(--accent-glow);">
+            <strong style="color: var(--accent);">✓ Importação concluída</strong>
+            <p style="font-size:0.88rem; color: var(--text-muted); margin-top:6px;">${msg.join(' · ')}</p>
+          </div>`;
+      }
+      showToast(msg.join(' · '));
+      refreshAll();
+    }
+
+    function importTextPayload(text, name) {
+      const msg = [];
+      if (name.endsWith('.gpx') || text.trim().startsWith('<?xml') || text.includes('<gpx')) {
+        const w = parseGPX(text);
+        const n = mergeWorkouts(w);
+        msg.push(`${n} treino(s) GPX`);
+        return msg;
+      }
+      // PDF texto Philips
+      const philips = parsePhilipsCpapReport(text);
+      if (philips) {
+        const n = mergeCpapReport(philips);
+        msg.push(n ? `Relatório CPAP Philips (${philips.dateFrom || '?'} → ${philips.dateTo || '?'}, IAH ${philips.ahi ?? '—'})` : 'Relatório CPAP já importado');
+        return msg;
+      }
+      const body = parseBodyCSV(text);
+      if (body.length) {
+        const existing = new Set(state.weighings.map(w => `${w.date}_${w.weight}`));
+        let added = 0;
+        body.forEach(entry => {
+          const key = `${entry.date}_${entry.weight}`;
+          if (!existing.has(key)) {
+            state.weighings.push(entry);
+            existing.add(key);
+            added++;
+          }
+        });
+        state.weighings.sort((a, b) => a.date.localeCompare(b.date));
+        msg.push(`${added} pesagem(ns)`);
+      }
+      const act = parseActivityCSV(text);
+      if (act.daily.length) msg.push(`${mergeActivities(act.daily)} dia(s) de atividade`);
+      if (act.workouts.length) msg.push(`${mergeWorkouts(act.workouts)} treino(s)`);
+      const sleepZ = parseSleepCSV(text);
+      if (sleepZ.length) msg.push(`${mergeSleep(sleepZ)} noite(s) sono (Zepp/genérico)`);
+      const sleepC = parseCpapCSV(text);
+      if (sleepC.length) msg.push(`${mergeSleep(sleepC)} noite(s) CPAP CSV`);
+      return msg;
+    }
+
+    async function importFile(file) {
       const name = (file.name || '').toLowerCase();
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const text = e.target.result;
-          let msg = [];
-
-          if (name.endsWith('.gpx') || text.trim().startsWith('<?xml') || text.includes('<gpx')) {
-            const w = parseGPX(text);
-            const n = mergeWorkouts(w);
-            msg.push(`${n} treino(s) GPX`);
-          } else {
-            // Try body first
-            const body = parseBodyCSV(text);
-            if (body.length) {
-              const existing = new Set(state.weighings.map(w => `${w.date}_${w.weight}`));
-              let added = 0;
-              body.forEach(entry => {
-                const key = `${entry.date}_${entry.weight}`;
-                if (!existing.has(key)) {
-                  state.weighings.push(entry);
-                  existing.add(key);
-                  added++;
-                }
-              });
-              state.weighings.sort((a, b) => a.date.localeCompare(b.date));
-              msg.push(`${added} pesagem(ns)`);
+      try {
+        if (name.endsWith('.pdf') || file.type === 'application/pdf') {
+          showToast('A ler PDF CPAP e gráficos…');
+          const { text, pdf } = await extractPdfText(file);
+          const msg = importTextPayload(text, name);
+          // Estimativas diárias a partir dos gráficos (Philips CareOrchestrator)
+          const philips = parsePhilipsCpapReport(text);
+          if (philips && pdf) {
+            try {
+              showToast('A extrair estimativas dos gráficos…');
+              const daily = await estimateCpapChartsFromPdf(pdf, philips);
+              if (daily.length) {
+                const n = mergeSleep(daily);
+                msg.push(`${n} noite(s) estimadas dos gráficos PDF`);
+              }
+            } catch (err) {
+              console.warn(err);
+              msg.push('Resumo PDF OK; estimativas dos gráficos falharam');
             }
-            // Activity / Zepp SPORT style
-            const act = parseActivityCSV(text);
-            if (act.daily.length) msg.push(`${mergeActivities(act.daily)} dia(s) de atividade`);
-            if (act.workouts.length) msg.push(`${mergeWorkouts(act.workouts)} treino(s)`);
           }
-
-          if (!msg.length) {
-            showToast('Nenhum dado reconhecido neste ficheiro');
-            return;
-          }
-          save(state);
-          const resultEl = document.getElementById('importResult');
-          resultEl.style.display = 'block';
-          resultEl.innerHTML = `
-            <div class="card" style="border-color: var(--accent); background: var(--accent-glow);">
-              <strong style="color: var(--accent);">✓ Importação concluída</strong>
-              <p style="font-size:0.88rem; color: var(--text-muted); margin-top:6px;">${msg.join(' · ')}</p>
-            </div>`;
-          showToast(msg.join(' · '));
-          refreshAll();
-        } catch (err) {
-          showToast(err.message || 'Erro ao importar');
-          console.error(err);
+          finishImport(msg);
+          return;
         }
-      };
-      reader.readAsText(file, 'UTF-8');
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const msg = importTextPayload(e.target.result, name);
+            finishImport(msg);
+          } catch (err) {
+            showToast(err.message || 'Erro ao importar');
+            console.error(err);
+          }
+        };
+        reader.readAsText(file, 'UTF-8');
+      } catch (err) {
+        showToast(err.message || 'Erro ao importar');
+        console.error(err);
+      }
+    }
+
+    // ========== Sleep analysis ==========
+    function sleepEfficiency(s) {
+      if (!s.totalMin || s.totalMin <= 0) return null;
+      const awake = s.awakeMin || 0;
+      const inBed = s.totalMin + awake;
+      if (inBed <= 0) return null;
+      return (s.totalMin / inBed) * 100;
+    }
+
+    function sleepQualityLocal(s) {
+      const tips = [];
+      let score = 70;
+      const hours = s.totalMin != null ? s.totalMin / 60 : null;
+      if (hours != null) {
+        if (hours >= 7 && hours <= 9) { score += 12; tips.push('Duração dentro da faixa recomendada (7–9 h).'); }
+        else if (hours < 6) { score -= 20; tips.push('Sono curto (<6 h): priorize horário de deitar mais cedo.'); }
+        else if (hours < 7) { score -= 8; tips.push('Ligeiramente abaixo de 7 h — tente ganhar 30–60 min.'); }
+        else { score -= 5; tips.push('Sono longo (>9 h): verifique fragmentação ou qualidade.'); }
+      }
+      if (s.deepMin != null && s.totalMin) {
+        const dp = (s.deepMin / s.totalMin) * 100;
+        if (dp >= 15 && dp <= 25) { score += 8; tips.push(`Sono profundo ~${dp.toFixed(0)}% (adequado).`); }
+        else if (dp < 10) { score -= 10; tips.push('Pouco sono profundo: evite álcool à noite e mantenha quarto fresco.'); }
+      }
+      if (s.remMin != null && s.totalMin) {
+        const rp = (s.remMin / s.totalMin) * 100;
+        if (rp >= 18 && rp <= 25) score += 6;
+        else if (rp < 15) { score -= 6; tips.push('REM baixo: evite ecrãs tarde e cafeína após meio da tarde.'); }
+      }
+      if (s.ahi != null) {
+        if (s.ahi < 5) { score += 10; tips.push(`AHI ${s.ahi.toFixed(1)}: controlado (<5).`); }
+        else if (s.ahi < 15) { score -= 8; tips.push(`AHI ${s.ahi.toFixed(1)}: residual ligeiro — reveja máscara e posição.`); }
+        else { score -= 18; tips.push(`AHI ${s.ahi.toFixed(1)}: elevado — fale com o médico do sono / ajuste de pressão.`); }
+      }
+      if (s.usageHrs != null) {
+        if (s.usageHrs >= 4) score += 5;
+        else { score -= 12; tips.push(`Uso CPAP ${s.usageHrs.toFixed(1)} h (<4 h): melhore a adesão.`); }
+      }
+      if (s.leak != null && s.leak > 24) {
+        score -= 8;
+        tips.push('Fuga de máscara elevada — ajuste o encaixe ou o modelo.');
+      }
+      if (s.score != null) {
+        if (s.score >= 80) score += 5;
+        else if (s.score < 60) score -= 8;
+      }
+      score = Math.max(0, Math.min(100, Math.round(score)));
+      return { score, tips };
+    }
+
+    function crossSleepBodyExercise() {
+      const notes = [];
+      const sleep = state.sleep.filter(s => s.totalMin || s.ahi != null).slice(-14);
+      if (!sleep.length) return notes;
+
+      // Treino no dia vs sono da noite seguinte (ou mesma data)
+      const byDate = {};
+      state.workouts.forEach(w => { byDate[w.date] = (byDate[w.date] || []).concat(w); });
+      let betterAfterRest = 0, worseAfterHard = 0, pairs = 0;
+      sleep.forEach(s => {
+        const prev = new Date(s.date);
+        prev.setDate(prev.getDate() - 1);
+        const prevKey = prev.toISOString().slice(0, 10);
+        const wos = byDate[prevKey] || byDate[s.date] || [];
+        if (!wos.length || s.totalMin == null) return;
+        pairs++;
+        const hard = wos.some(w => (w.durationMin || 0) >= 45 || (w.calories || 0) >= 400);
+        if (hard && s.totalMin < 6.5 * 60) worseAfterHard++;
+        if (!hard && s.totalMin >= 7 * 60) betterAfterRest++;
+      });
+      if (pairs >= 3) {
+        if (worseAfterHard >= 2) notes.push('Após treinos mais longos/intensos, o sono tende a encurtar — planeie recuperação e evite treino muito tarde.');
+        if (betterAfterRest >= 2) notes.push('Noites com ≥7 h correlacionam-se com dias de carga moderada — bom sinal de gestão de esforço.');
+      }
+
+      // Peso / gordura vs sono
+      const weighByDate = {};
+      state.weighings.forEach(w => { weighByDate[w.date] = w; });
+      const pairsW = [];
+      sleep.forEach(s => {
+        const w = weighByDate[s.date];
+        if (w && s.totalMin != null) pairsW.push({ sleepH: s.totalMin / 60, weight: w.weight, fat: w.fat });
+      });
+      if (pairsW.length >= 4) {
+        const short = pairsW.filter(x => x.sleepH < 6.5);
+        const long = pairsW.filter(x => x.sleepH >= 7);
+        if (short.length && long.length) {
+          const avgFatS = short.filter(x => x.fat != null).map(x => x.fat);
+          const avgFatL = long.filter(x => x.fat != null).map(x => x.fat);
+          if (avgFatS.length && avgFatL.length) {
+            const mS = avgFatS.reduce((a, b) => a + b, 0) / avgFatS.length;
+            const mL = avgFatL.reduce((a, b) => a + b, 0) / avgFatL.length;
+            if (mS > mL + 0.3) notes.push(`Em noites curtas, % gordura média observável tende a ser mais alta (${mS.toFixed(1)}% vs ${mL.toFixed(1)}%) — o sono curto associa-se a pior composição.`);
+          }
+        }
+      }
+
+      // AHI vs recovery perception via score
+      const cpap = sleep.filter(s => s.ahi != null);
+      if (cpap.length >= 3) {
+        const avgAhi = cpap.reduce((a, s) => a + s.ahi, 0) / cpap.length;
+        notes.push(`AHI médio (CPAP) nos últimos registos: ${avgAhi.toFixed(1)}. Objetivo terapêutico habitual: <5 eventos/h.`);
+      }
+      return notes;
+    }
+
+    function buildSleepAiPrompt() {
+      const recent = state.sleep.slice(-21);
+      const lines = recent.map(s => {
+        const parts = [s.date, s.source];
+        if (s.totalMin != null) parts.push(`total=${(s.totalMin / 60).toFixed(2)}h`);
+        if (s.deepMin != null) parts.push(`deep=${s.deepMin}min`);
+        if (s.lightMin != null) parts.push(`light=${s.lightMin}min`);
+        if (s.remMin != null) parts.push(`rem=${s.remMin}min`);
+        if (s.score != null) parts.push(`score=${s.score}`);
+        if (s.ahi != null) parts.push(`AHI=${s.ahi}`);
+        if (s.usageHrs != null) parts.push(`CPAP=${s.usageHrs}h`);
+        if (s.leak != null) parts.push(`leak=${s.leak}`);
+        return parts.join(' | ');
+      });
+      const body = state.weighings.slice(-10).map(w =>
+        `${w.date}: ${w.weight}kg` + (w.fat != null ? ` fat=${w.fat}%` : '')
+      ).join('\n');
+      const wo = state.workouts.slice(-10).map(w =>
+        `${w.date}: ${w.type} ${w.durationMin || '?'}min ${w.calories || ''}kcal`
+      ).join('\n');
+      return `És um assistente de saúde do sono (não és médico). Com base nos dados abaixo, escreve em português de Portugal:
+1) Resumo da qualidade de sono (7–14 dias)
+2) Cruzamento com exercício e composição corporal
+3) 5 sugestões práticas e prioritárias de melhoria
+4) Sinais de alerta que merecem avaliação clínica (se existirem)
+
+Dados de sono:
+${lines.join('\n') || '(sem dados)'}
+
+Pesagens recentes:
+${body || '(sem dados)'}
+
+Treinos recentes:
+${wo || '(sem dados)'}
+
+Responde de forma clara, empática e baseada em evidência geral (duração 7–9h, higiene do sono, AHI <5 em CPAP).`;
     }
 
     // ========== AI Insights ==========
@@ -2292,6 +3172,60 @@
           icon: '⏱️',
           color: '#a78bfa',
           body: `Tem <strong>${state.workouts.length}</strong> treino(s) registado(s), mas ainda sem dados de composição antes/depois nem água. Em <em>Adicionar → Registar treino</em>, preencha peso/% gordura antes e depois e a água ingerida (ml) para gerar a correlação automática.`
+        });
+      }
+
+      // Relatórios CPAP Philips (período)
+      if (state.cpapReports && state.cpapReports.length) {
+        const r = state.cpapReports[state.cpapReports.length - 1];
+        let body = `<strong>Philips / DreamStation</strong> · ${r.dateFrom || '—'} → ${r.dateTo || '—'}<br>`;
+        body += `IAH médio: <strong>${r.ahi != null ? r.ahi : '—'}</strong>`;
+        if (r.oa != null || r.ca != null) body += ` (AO ${r.oa ?? '—'} · AC ${r.ca ?? '—'})`;
+        body += `<br>Uso médio: <strong>${r.avgUseHrs != null ? r.avgUseHrs.toFixed(1) + ' h' : '—'}</strong>`;
+        if (r.pctGte4h != null) body += ` · dias ≥4 h: <strong>${r.pctGte4h}%</strong>`;
+        if (r.pressureAvg != null) body += `<br>Pressão média Auto-CPAP: ${r.pressureAvg} cmH₂O`;
+        if (r.pressure90 != null) body += ` · P90: ${r.pressure90}`;
+        if (r.largeLeakMinPerDay != null) body += `<br>Fuga grande média: ${Math.round(r.largeLeakMinPerDay)} min/noite`;
+        body += '<ul style="margin:8px 0 0 18px;">';
+        if (r.ahi != null && r.ahi >= 5) body += '<li>IAH residual ≥5: reveja máscara, posição e consulta de sono.</li>';
+        else if (r.ahi != null) body += '<li>IAH médio na faixa desejável (&lt;5) ou próximo — mantenha adesão.</li>';
+        if (r.pctGte4h != null && r.pctGte4h < 70) body += '<li>Adesão &lt;70% de noites com ≥4 h: priorize uso consistente (meta habitual de cobertura).</li>';
+        if (r.avgUseHrs != null && r.avgUseHrs < 4) body += '<li>Média de uso &lt;4 h/noite — tente antecipar o deitar com a máscara já ajustada.</li>';
+        body += '</ul>';
+        insights.push({ title: 'CPAP — relatório de período', icon: '🫁', color: '#38bdf8', body });
+      }
+
+      // Sono + cruzamento + sugestões
+      if (state.sleep && state.sleep.length) {
+        const recent = state.sleep.slice(-14);
+        const withDur = recent.filter(s => s.totalMin != null);
+        const avgH = withDur.length
+          ? withDur.reduce((a, s) => a + s.totalMin, 0) / withDur.length / 60
+          : null;
+        const last = recent[recent.length - 1];
+        const q = sleepQualityLocal(last);
+        let sleepBody = `<strong>Última noite (${last.date})</strong> · origem ${last.source === 'cpap' ? 'CPAP' : 'Zepp/relógio'}. `;
+        if (last.totalMin != null) sleepBody += `Duração ${(last.totalMin / 60).toFixed(1)} h. `;
+        if (last.deepMin != null) sleepBody += `Profundo ${last.deepMin} min. `;
+        if (last.remMin != null) sleepBody += `REM ${last.remMin} min. `;
+        if (last.ahi != null) sleepBody += `AHI ${last.ahi}. `;
+        if (last.usageHrs != null) sleepBody += `Uso CPAP ${last.usageHrs.toFixed(1)} h. `;
+        sleepBody += `<br>Índice de qualidade local: <strong>${q.score}/100</strong>. `;
+        if (avgH != null) sleepBody += `Média ${recent.length} noites: <strong>${avgH.toFixed(1)} h</strong>. `;
+        sleepBody += `<ul style="margin:8px 0 0 18px;padding:0;">${q.tips.map(t => `<li>${t}</li>`).join('')}</ul>`;
+
+        const cross = crossSleepBodyExercise();
+        if (cross.length) {
+          sleepBody += `<p style="margin-top:10px;"><strong>Cruzamento corpo &amp; exercício</strong></p><ul style="margin:4px 0 0 18px;">${cross.map(c => `<li>${c}</li>`).join('')}</ul>`;
+        }
+        sleepBody += `<p style="margin-top:10px;font-size:0.82rem;color:var(--text-muted);">Para um resumo com Grok, ChatGPT ou Claude: use o botão <em>Copiar prompt IA (sono)</em> na página IA.</p>`;
+        insights.push({ title: 'Qualidade de sono', icon: '😴', color: '#818cf8', body: sleepBody });
+      } else {
+        insights.push({
+          title: 'Qualidade de sono',
+          icon: '😴',
+          color: '#818cf8',
+          body: 'Ainda sem dados de sono. Importe CSV da <strong>Zepp</strong> (sono agregado: deep/shallow/REM) ou relatório <strong>CPAP</strong> (myAir / device data: AHI, usage, leak) na página Adicionar.'
         });
       }
 
@@ -2926,6 +3860,38 @@
           </div>
         `;
       }
+
+      const sleepGrid = document.getElementById('sleepGrid');
+      if (sleepGrid) {
+        const weekSleep = state.sleep.filter(s => s.date >= weekAgo);
+        const lastS = state.sleep.length ? state.sleep[state.sleep.length - 1] : null;
+        const withDur = weekSleep.filter(s => s.totalMin != null);
+        const avgH = withDur.length
+          ? (withDur.reduce((a, s) => a + s.totalMin, 0) / withDur.length / 60).toFixed(1) + ' h'
+          : '—';
+        let ahiScore = '—';
+        if (lastS?.ahi != null) ahiScore = 'AHI ' + lastS.ahi;
+        else if (lastS?.score != null) ahiScore = String(lastS.score);
+        const q = lastS ? sleepQualityLocal(lastS).score : null;
+        sleepGrid.innerHTML = `
+          <div class="metric-card">
+            <div class="metric-value">${lastS?.totalMin != null ? (lastS.totalMin / 60).toFixed(1) + ' h' : '—'}</div>
+            <div class="metric-label">Última noite</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${avgH}</div>
+            <div class="metric-label">Média 7d</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" style="font-size:1rem;">${ahiScore}</div>
+            <div class="metric-label">AHI / score</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${q != null ? q : '—'}</div>
+            <div class="metric-label">Qualidade /100</div>
+          </div>
+        `;
+      }
       renderChart();
 
       const insights = generateInsights();
@@ -3016,6 +3982,37 @@
             </div>` : (analysis ? `<div style="margin-top:6px;font-size:0.78rem;color:var(--text-dim);">${analysis}</div>` : '')}
           </div>`;
       }).join('');
+
+      const sList = document.getElementById('historySleepList');
+      if (sList) {
+        const sleeps = [...state.sleep].reverse();
+        if (!sleeps.length) {
+          sList.innerHTML = `<div class="empty"><p>Sem dados de sono. Importe CSV Zepp ou CPAP.</p></div>`;
+        } else {
+          sList.innerHTML = sleeps.map((s, idx) => {
+            const realIdx = state.sleep.length - 1 - idx;
+            const q = sleepQualityLocal(s);
+            const bits = [];
+            if (s.totalMin != null) bits.push((s.totalMin / 60).toFixed(1) + ' h');
+            if (s.deepMin != null) bits.push('prof. ' + s.deepMin + ' min');
+            if (s.remMin != null) bits.push('REM ' + s.remMin + ' min');
+            if (s.ahi != null) bits.push('AHI ' + s.ahi);
+            if (s.usageHrs != null) bits.push('CPAP ' + s.usageHrs.toFixed(1) + ' h');
+            if (s.leak != null) bits.push('fuga ' + s.leak);
+            return `
+              <div class="history-item">
+                <div>
+                  <div class="history-weight" style="font-size:0.95rem;">${s.source === 'cpap' ? 'CPAP' : 'Sono'} · ${bits[0] || '—'}</div>
+                  <div class="history-date">${new Date(s.date).toLocaleDateString('pt-PT')} · ${bits.slice(1).join(' · ') || s.source}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:0.85rem;color:var(--text-muted);">${q.score}/100</div>
+                  <button type="button" class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:0.75rem;margin-top:4px;" onclick="deleteSleep(${realIdx})">Apagar</button>
+                </div>
+              </div>`;
+          }).join('');
+        }
+      }
     }
 
     function renderFullInsights() {
@@ -3362,6 +4359,33 @@
       const mode = tab.dataset.hist;
       document.getElementById('historyWeighingsBlock').style.display = mode === 'weighings' ? '' : 'none';
       document.getElementById('historyWorkoutsBlock').style.display = mode === 'workouts' ? '' : 'none';
+      const hs = document.getElementById('historySleepBlock');
+      if (hs) hs.style.display = mode === 'sleep' ? '' : 'none';
+    });
+
+    window.deleteSleep = function(idx) {
+      if (!confirm('Apagar este registo de sono?')) return;
+      state.sleep.splice(idx, 1);
+      save(state);
+      showToast('Sono apagado');
+      refreshAll();
+    };
+
+    document.getElementById('btnCopySleepPrompt')?.addEventListener('click', async () => {
+      const prompt = buildSleepAiPrompt();
+      try {
+        await navigator.clipboard.writeText(prompt);
+        showToast('Prompt copiado — cole no Grok, ChatGPT ou Claude');
+      } catch {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = prompt;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        showToast('Prompt copiado');
+      }
     });
 
     document.getElementById('wDate').value = new Date().toISOString().slice(0, 10);
@@ -3380,6 +4404,8 @@
         weighings: state.weighings,
         workouts: state.workouts,
         activities: state.activities,
+        sleep: state.sleep,
+        cpapReports: state.cpapReports,
         connections: {
           // não exportar tokens sensíveis por defeito — só clientId Fitbit
           fitbit: state.connections?.fitbit ? {
@@ -3435,6 +4461,8 @@
         state.weighings = Array.isArray(data.weighings) ? data.weighings : [];
         state.workouts = Array.isArray(data.workouts) ? data.workouts : [];
         state.activities = Array.isArray(data.activities) ? data.activities : [];
+        state.sleep = Array.isArray(data.sleep) ? data.sleep : [];
+        state.cpapReports = Array.isArray(data.cpapReports) ? data.cpapReports : [];
         if (data.connections?.fitbit?.clientId) {
           if (!state.connections) state.connections = {};
           state.connections.fitbit = { ...(state.connections.fitbit || {}), clientId: data.connections.fitbit.clientId };

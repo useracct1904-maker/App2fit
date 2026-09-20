@@ -1,4 +1,4 @@
-const CACHE_NAME = 'app2fit-v9';
+const CACHE_NAME = 'app2fit-v18';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,11 @@ const ASSETS = [
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
+  './icons/mark.svg',
+  './icons/mark-192.png',
+  './icons/mark-512.png',
+  './icons/full.png',
+  './icons/wordmark.png',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
 ];
 
